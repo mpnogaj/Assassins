@@ -1,0 +1,8 @@
+{
+    "eslint.validate": ["javascript", "typescript"],
+    "editor.codeActionsOnSave": {
+      "source.fixAll.eslint": "always"
+    },
+    "editor.tabSize": 2,
+    "editor.useTabStops": true
+  }

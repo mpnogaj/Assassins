@@ -1,0 +1,15 @@
+﻿using Assassins.Models;
+
+namespace Assassins.Services.Repositories.PlayerRepository;
+
+public interface IPlayerRepository
+{
+	public Task<Player?> GetPlayer(Guid id);
+	public Task<List<Player>> GetPlayers();
+	public Task<List<Player>> GetPlayersWithVictims();
+
+	public Task UpdatePlayers(List<Player> players);
+
+	public Task DeleteAllPlayers();
+	public Task AddPlayers(List<Player> players);
+}
