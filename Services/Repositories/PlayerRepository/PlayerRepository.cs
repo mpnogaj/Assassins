@@ -15,20 +15,18 @@ public class PlayerRepository : IPlayerRepository
 
 	public Task<Player?> GetPlayer(Guid id)
 	{
-		return _dbContext.Players.Include(player => player.User).FirstOrDefaultAsync(player => player.Id == id);
+		return _dbContext.Players
+						 .Include(player => player.User)
+						 .Include(player => player.Target)
+						 .FirstOrDefaultAsync(player => player.Id == id);
 	}
 
 	public Task<List<Player>> GetPlayers()
 	{
-		return _dbContext.Players.Include(player => player.User).ToListAsync();
-	}
-
-	public Task<List<Player>> GetPlayersWithVictims()
-	{
 		return _dbContext.Players
-		                 .Include(player => player.User)
-		                 .Include(player => player.Target)
-		                 .ToListAsync();
+						 .Include(player => player.User)
+						 .Include(player => player.Target)
+						 .ToListAsync();
 	}
 
 	public async Task UpdatePlayers(List<Player> players)

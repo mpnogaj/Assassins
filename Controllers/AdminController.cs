@@ -81,4 +81,21 @@ public class AdminController : ControllerBase
 
 		return Ok(extendedGameProgressDto);
 	}
+
+	[HttpPost("kill")]
+	public async Task<IActionResult> AdminKill([FromBody] AdminKillDto adminKillDto)
+	{
+		if (_gameService.GameState is not InProgressState _)
+		{
+			return Conflict();
+		}
+
+		var successful = await _gameService.AdminKill(adminKillDto.PlayerGuid);
+
+		if (!successful)
+		{
+			return NotFound();
+		}
+		return Ok();
+	}
 }

@@ -12,7 +12,8 @@ const Endpoints = {
 		closeRegistration: '/admin/closeRegistration',
 		startGame: '/admin/startGame',
 		restartGame: '/admin/restartGame',
-		extendedProgress: '/admin/extendedProgress'
+		extendedProgress: '/admin/extendedProgress',
+		adminKill: '/admin/kill'
 	},
 	game: {
 		gameState: '/game/state',

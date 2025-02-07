@@ -1,10 +1,22 @@
+import { sendPost } from '@/utils/fetchUtils';
 import { FetchableComponent, useFetchableComponent } from '../hoc/FetchableComponent';
 import ExtendedGameProgressDto from '@/types/dto/admin/extendedGameProgressDto';
+import Endpoints from '@/endpoints';
+import AdminKillDto from '@/types/dto/admin/adminKillDto';
 
-// Should contain ws to update those stats in real life
-// to refetch data when on kill
-// ws can be shared with user one as it will notify on kill
 class AdminInProgressComponent extends FetchableComponent<ExtendedGameProgressDto> {
+	adminKillPlayer = async (playerId: string) => {
+		const payload: AdminKillDto = {
+			playerGuid: playerId
+		};
+		try {
+			// dont need to call refetch here as parent GameStateComponent will get notified and reloaded
+			await sendPost(Endpoints.admin.adminKill, payload);
+		} catch {
+			alert('Something went wrong xd');
+		}
+	};
+
 	render() {
 		return (
 			<div>
@@ -34,7 +46,7 @@ class AdminInProgressComponent extends FetchableComponent<ExtendedGameProgressDt
 										<th>{playerData.victimId}</th>
 										<th>{playerData.victimFullName}</th>
 										<th>
-											<a className="btn" onClick={() => alert('todo')}>
+											<a className="btn" onClick={() => this.adminKillPlayer(playerData.playerId)}>
 												Force kill
 											</a>
 										</th>

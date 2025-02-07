@@ -115,35 +115,33 @@ public class GameService : IGameService
 		});
 	}
 
-	public Task<bool> AttemptKill(Player killer, string code)
+	public async Task<bool> AttemptKill(Player killer, string code)
 	{
-		return GetServiceFromScope<bool, IPlayerRepository>(async playerRepository =>
+		using var scope = _serviceProvider.CreateScope();
+		var playerRepository = scope.ServiceProvider.GetRequiredService<IPlayerRepository>();
+
+		if (GameState is not InProgressState _ || killer.Target.KillCode != code)
 		{
-			if (GameState is not InProgressState inProgressState || killer.Target.KillCode != code)
-			{
-				return false;
-			}
+			return false;
+		}
 
-			var killedPlayer = killer.Target;
+		await KillPlayer(playerRepository, killer);
+		return true;
+	}
 
-			killedPlayer.Alive = false;
+	public async Task<bool> AdminKill(Guid killerGuid)
+	{
+		using var scope = _serviceProvider.CreateScope();
+		var playerRepository = scope.ServiceProvider.GetRequiredService<IPlayerRepository>();
 
-			killer.Target = killedPlayer.Target;
-			killedPlayer.Target = killedPlayer;
+		var killer = await playerRepository.GetPlayer(killerGuid);
+		if (killer == null)
+		{
+			return false;
+		}
 
-			await playerRepository.UpdatePlayers(new List<Player> { killer, killedPlayer });
-
-			var alivePlayers = (await playerRepository.GetPlayers()).Count(player => player.Alive);
-
-			GameState = new InProgressState(alivePlayers);
-
-			if (alivePlayers == 1)
-			{
-				FinishGame(killer.User);
-			}
-
-			return true;
-		});
+		await KillPlayer(playerRepository, killer);
+		return true;
 	}
 
 	public Task<List<Player>> GetPlayersWithTargets()
@@ -155,7 +153,28 @@ public class GameService : IGameService
 
 		using var scope = _serviceProvider.CreateScope();
 		var playerRepository = scope.ServiceProvider.GetRequiredService<IPlayerRepository>();
-		return playerRepository.GetPlayersWithVictims();
+		return playerRepository.GetPlayers();
+	}
+
+	private async Task KillPlayer(IPlayerRepository playerRepository, Player killer)
+	{
+		var killedPlayer = killer.Target;
+
+		killedPlayer.Alive = false;
+
+		killer.Target = killedPlayer.Target;
+		killedPlayer.Target = killedPlayer;
+
+		await playerRepository.UpdatePlayers(new List<Player> { killer, killedPlayer });
+
+		var alivePlayers = (await playerRepository.GetPlayers()).Count(player => player.Alive);
+
+		GameState = new InProgressState(alivePlayers);
+
+		if (alivePlayers == 1)
+		{
+			FinishGame(killer.User);
+		}
 	}
 
 	private void FinishGame(User winner)
