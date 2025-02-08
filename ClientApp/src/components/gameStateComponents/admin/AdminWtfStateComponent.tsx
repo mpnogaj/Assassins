@@ -5,14 +5,14 @@ type Props = {
 	GameStateComponentStateName: string;
 };
 
+const createNewGame = async () => {
+	const startGame = window.confirm('Are you sure you want to start new game?');
+	if (!startGame) return;
+
+	await sendPost(Endpoints.admin.restartGame);
+};
+
 const AdminWtfStateComponent = (props: Props) => {
-	const createNewGame = async () => {
-		const startGame = window.confirm('Are you sure you want to start new game?');
-		if (!startGame) return;
-
-		await sendPost(Endpoints.admin.restartGame);
-	};
-
 	return (
 		<div>
 			<div>

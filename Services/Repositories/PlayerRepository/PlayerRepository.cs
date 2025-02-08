@@ -29,24 +29,15 @@ public class PlayerRepository : IPlayerRepository
 						 .ToListAsync();
 	}
 
-	public async Task UpdatePlayers(List<Player> players)
+	public Task UpdatePlayers(List<Player> players)
 	{
 		foreach (var player in players)
 		{
-			var entry = _dbContext.Entry(player);
-			if (entry.State != EntityState.Detached) continue;
-
-			var attachedPlayer = await _dbContext.Players.FindAsync(player.Id);
-			if (attachedPlayer != null)
-			{
-				var attachedEntry = _dbContext.Entry(player);
-				attachedEntry.CurrentValues.SetValues(player);
-			}
-			else
-			{
-				entry.State = EntityState.Modified;
-			}
+			_dbContext.Players.Attach(player);
+			_dbContext.Entry(player).State = EntityState.Modified;
 		}
+
+		return _dbContext.SaveChangesAsync();
 	}
 
 	public Task DeleteAllPlayers()

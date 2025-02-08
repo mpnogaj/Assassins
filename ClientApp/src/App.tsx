@@ -1,44 +1,43 @@
-import ButtonWithNavigation from './components/ButtonWithNavigation';
-import GreeterComponent from './components/GreeterComponent';
-import { fetchUserInfo } from './dataFetchers/userDataFetches';
-import Endpoints from './endpoints';
-import { sendPost } from './utils/fetchUtils';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router';
+import ProtectedRoute from './components/ProtectedRoute';
+import Home from './pages/HomePage';
+import { isAdmin, isLoggedIn } from './utils/auth';
+import LoaderComponent from './components/LoaderComponent';
+import AdminPage from './pages/AdminPage';
+import LoginPage from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
 
-import GameStateComponent from './components/GameStateComponent';
-import { fetchGameState, fetchRegistrationStatus } from './dataFetchers/gameFetchers';
-import RegistrationComponent from './components/RegistrationComponent';
-
-function App() {
-	const logout = async () => {
-		await sendPost(Endpoints.user.logout);
-		return true;
-	};
-
+const App = () => {
 	return (
-		<div>
-			<GreeterComponent
-				dataFetcher={async () => {
-					const userDto = await fetchUserInfo();
-					return userDto;
-				}}
-			/>
-			<ButtonWithNavigation
-				buttonText="Logout"
-				isButton={false}
-				destination="/login"
-				onClick={logout}
-			/>
-			<GameStateComponent
-				dataFetcher={fetchGameState}
-				RegistrationStateComponent={<RegistrationComponent dataFetcher={fetchRegistrationStatus} />}
-				AboutToStartStateComponent={<h1>About to start</h1>}
-				InProgressStateComponent={<h1>In progress</h1>}
-				FinishedStateComponent={<h1>Finished state</h1>}
-				UnknownStateComponent={<h1>Unknown state</h1>}
-				FallbackStateComponent={<h1>Fallback state</h1>}
-			/>
-		</div>
+		<BrowserRouter>
+			<Routes>
+				<Route
+					path="/"
+					element={
+						<ProtectedRoute
+							checkAuthFunc={isLoggedIn}
+							loading={<h1>Loading...</h1>}
+							child={<Home />}
+							fallback={<Navigate to="/login" />}
+						/>
+					}
+				/>
+				<Route
+					path="/admin"
+					element={
+						<ProtectedRoute
+							checkAuthFunc={isAdmin}
+							loading={<LoaderComponent />}
+							child={<AdminPage />}
+							fallback={<Navigate to="/" />}
+						/>
+					}
+				/>
+				<Route path="/login" element={<LoginPage />} />
+				<Route path="/register" element={<RegisterPage />} />
+			</Routes>
+		</BrowserRouter>
 	);
-}
+};
 
 export default App;

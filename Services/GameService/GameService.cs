@@ -162,8 +162,8 @@ public class GameService : IGameService
 
 		killedPlayer.Alive = false;
 
-		killer.Target = killedPlayer.Target;
-		killedPlayer.Target = killedPlayer;
+		killer.TargetGuid = killedPlayer.TargetGuid;
+		killedPlayer.TargetGuid = killedPlayer.Id;
 
 		await playerRepository.UpdatePlayers(new List<Player> { killer, killedPlayer });
 
@@ -171,10 +171,18 @@ public class GameService : IGameService
 
 		GameState = new InProgressState(alivePlayers);
 
+		var players = await playerRepository.GetPlayers();
+
 		if (alivePlayers == 1)
 		{
 			FinishGame(killer.User);
+			return;
 		}
+
+		GetServiceFromScope<IHubContext<AssassinsHub, IAssassinsClient>>(hub =>
+		{
+			hub.Clients.All.NotifyKillHappened();
+		});
 	}
 
 	private void FinishGame(User winner)

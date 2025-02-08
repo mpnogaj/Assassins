@@ -63,9 +63,11 @@ public class AdminController : ControllerBase
 		}
 
 		var alivePlayers = inProgressState.AlivePlayers;
-		var playersWithVTargets = await _gameService.GetPlayersWithTargets();
+		var playersWithTargets = await _gameService.GetPlayersWithTargets();
 
-		var playerData = playersWithVTargets.Select(player => new ExtendedGameProgressDto.PlayerWithTargetDto
+		var playerData = playersWithTargets
+		                 .Where(player => player.Alive)
+		                 .Select(player => new ExtendedGameProgressDto.PlayerWithTargetDto
 		{
 			PlayerId = player.Id,
 			PlayerFullName = player.User.FullName,

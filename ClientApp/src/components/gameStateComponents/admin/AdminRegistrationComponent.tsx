@@ -1,14 +1,14 @@
 import Endpoints from '@/endpoints';
 import { sendPost } from '@/utils/fetchUtils';
 
+const closeRegistrationClick = async () => {
+	const closeRegistration = window.confirm('Are you sure you want to close registration?');
+	if (!closeRegistration) return;
+
+	await sendPost(Endpoints.admin.closeRegistration);
+};
+
 const AdminRegistrationComponent = () => {
-	const closeRegistrationClick = async () => {
-		const closeRegistration = window.confirm('Are you sure you want to close registration?');
-		if (!closeRegistration) return;
-
-		await sendPost(Endpoints.admin.closeRegistration);
-	};
-
 	return (
 		<div>
 			<span>Registration in progress</span>

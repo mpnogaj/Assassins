@@ -1,5 +1,5 @@
 import prettier from 'eslint-plugin-prettier';
-import typescriptEslint, { rules } from '@typescript-eslint/eslint-plugin';
+import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import globals from 'globals';
 import tsParser from '@typescript-eslint/parser';
 import path from 'node:path';
@@ -27,10 +27,14 @@ export default [
     },
 
     rules: {
-      "no-unused-vars": ["error", {
-        "varsIgnorePattern": "^_",
-        "argsIgnorePattern": "^_"
-      }]
+      // Disable the base rule as it can report incorrect errors
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': ['error', {
+        varsIgnorePattern: '^_',
+        argsIgnorePattern: '^_'
+      }],
+
+      'prettier/prettier': 'error'
     },
 
     languageOptions: {
@@ -41,10 +45,6 @@ export default [
       parser: tsParser,
       ecmaVersion: 2020,
       sourceType: 'commonjs'
-    },
-
-    rules: {
-      'prettier/prettier': 'error'
     }
   }
 ];

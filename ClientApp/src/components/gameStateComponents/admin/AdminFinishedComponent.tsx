@@ -1,14 +1,14 @@
 import Endpoints from '@/endpoints';
 import { sendPost } from '@/utils/fetchUtils';
 
+const createNewGame = async () => {
+	const startGame = window.confirm('Are you sure you want to start new game?');
+	if (!startGame) return;
+
+	await sendPost(Endpoints.admin.restartGame);
+};
+
 const AdminFinishedComponent = () => {
-	const createNewGame = async () => {
-		const startGame = window.confirm('Are you sure you want to start new game?');
-		if (!startGame) return;
-
-		await sendPost(Endpoints.admin.restartGame);
-	};
-
 	return (
 		<div>
 			<div>

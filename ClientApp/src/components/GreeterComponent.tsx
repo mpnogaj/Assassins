@@ -1,14 +1,21 @@
-import { FetchableComponent, useFetchableComponent } from './hoc/FetchableComponent';
+import { useDataFetch } from '@/hooks/useDataFetch';
 import { UserDto } from '@/types/dto/userDto';
+import LoaderComponent from './LoaderComponent';
+import FetchErrorComponent from './FetchErrorComponent';
+import { fetchUserInfo } from '@/dataFetchers/userDataFetches';
 
-class GreeterComponent extends FetchableComponent<UserDto> {
-	render() {
-		return (
-			<div>
-				<h1>Hej {this.props.data.fullName} - Walcz synu!</h1>
-			</div>
-		);
-	}
-}
+const GreeterComponent = () => {
+	const { data, isLoading, isError, refetch } = useDataFetch<UserDto>(fetchUserInfo);
+	const _ = refetch;
 
-export default useFetchableComponent<UserDto>(GreeterComponent);
+	if (isLoading) return <LoaderComponent />;
+	if (isError || !data) return <FetchErrorComponent />;
+
+	return (
+		<div>
+			<h1>Hej {data.fullName} - Walcz synu!</h1>
+		</div>
+	);
+};
+
+export default GreeterComponent;

@@ -17,7 +17,8 @@ const Endpoints = {
 	},
 	game: {
 		gameState: '/game/state',
-		register: '/game/register'
+		register: '/game/register',
+		progress: '/game/progress'
 	}
 };
 

@@ -110,15 +110,15 @@ public class GameController : ControllerBase
 			// treat user as spectator
 			return Ok(new GameProgressDto
 			{
-				AliveUsers = inProgressState.AlivePlayers,
-				UserAlive = null
+				AlivePlayers = inProgressState.AlivePlayers,
+				PlayerAlive = null
 			});
 		}
 
 		return Ok(new GameProgressDto
 		{
-			AliveUsers = inProgressState.AlivePlayers,
-			UserAlive = player.Alive
+			AlivePlayers = inProgressState.AlivePlayers,
+			PlayerAlive = player.Alive
 		});
 	}
 

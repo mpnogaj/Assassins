@@ -1,8 +1,10 @@
 import GameStateDto, { GameStates } from '@/types/dto/game/gameStateDto';
-import { JSX } from 'react';
-import { FetchableComponent, useFetchableComponent } from './hoc/FetchableComponent';
-import { HubConnectionBuilder } from '@microsoft/signalr';
-import Endpoints from '@/endpoints';
+import { JSX, useEffect } from 'react';
+import { fetchGameState } from '@/dataFetchers/gameFetchers';
+import { useDataFetch } from '@/hooks/useDataFetch';
+import { useWebSocket } from '@/hooks/useWebSocket';
+import LoaderComponent from './LoaderComponent';
+import FetchErrorComponent from './FetchErrorComponent';
 
 type Props = {
 	UnknownStateComponent: JSX.Element;
@@ -14,42 +16,40 @@ type Props = {
 	FallbackStateComponent: JSX.Element;
 };
 
-class GameStateComponent extends FetchableComponent<GameStateDto, Props> {
-	connection = new HubConnectionBuilder().withUrl(Endpoints.ws).build();
+const GameStateComponent: React.FC<Props> = props => {
+	const { data, isLoading, isError, refetch } = useDataFetch<GameStateDto>(fetchGameState);
+	const connection = useWebSocket();
 
-	componentDidMount(): void {
-		this.connection.on('NotifyGameStateChanged', () => {
-			console.log('game state changed, updating...');
-			this.props.refetch();
+	useEffect(() => {
+		if (!connection) return;
+
+		connection.on('NotifyGameStateChanged', () => {
+			console.log('Game state changed, updating...');
+			refetch();
 		});
 
-		this.connection
-			.start()
-			.then(() => console.log('ws connected'))
-			.catch(err => console.error(err));
-	}
+		return () => {
+			connection.off('NotifyGameStateChanged');
+		};
+	}, [connection]);
 
-	componentWillUnmount(): void {
-		this.connection.off('NotifyGameStateChanged');
-		this.connection.stop();
-	}
+	if (isLoading) return <LoaderComponent />;
+	if (isError || !data) return <FetchErrorComponent />;
 
-	render() {
-		switch (this.props.data.gameState) {
-			case GameStates.UnknownState:
-				return this.props.UnknownStateComponent;
-			case GameStates.RegistrationState:
-				return this.props.RegistrationStateComponent;
-			case GameStates.AboutToStartState:
-				return this.props.AboutToStartStateComponent;
-			case GameStates.InProgressState:
-				return this.props.InProgressStateComponent;
-			case GameStates.FinishedState:
-				return this.props.FinishedStateComponent;
-			default:
-				return this.props.FallbackStateComponent;
-		}
+	switch (data.gameState) {
+		case GameStates.UnknownState:
+			return props.UnknownStateComponent;
+		case GameStates.RegistrationState:
+			return props.RegistrationStateComponent;
+		case GameStates.AboutToStartState:
+			return props.AboutToStartStateComponent;
+		case GameStates.InProgressState:
+			return props.InProgressStateComponent;
+		case GameStates.FinishedState:
+			return props.FinishedStateComponent;
+		default:
+			return props.FallbackStateComponent;
 	}
-}
+};
 
-export default useFetchableComponent<GameStateDto, Props>(GameStateComponent);
+export default GameStateComponent;

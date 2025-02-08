@@ -1,26 +1,31 @@
 import RegistrationStatusDto from '@/types/dto/game/registrationStatusDto';
-import { FetchableComponent, useFetchableComponent } from './hoc/FetchableComponent';
-import { empty } from '@/types/other';
-import { ReactNode } from 'react';
 import { sendPost } from '@/utils/fetchUtils';
 import Endpoints from '@/endpoints';
+import { useDataFetch } from '@/hooks/useDataFetch';
+import { fetchRegistrationStatus } from '@/dataFetchers/gameFetchers';
+import LoaderComponent from './LoaderComponent';
+import FetchErrorComponent from './FetchErrorComponent';
 
-class RegistrationComponent extends FetchableComponent<RegistrationStatusDto, empty> {
-	registerBtnHandler = async () => {
+const RegistrationComponent = () => {
+	const { data, isLoading, isError, refetch } =
+		useDataFetch<RegistrationStatusDto>(fetchRegistrationStatus);
+
+	const registerBtnHandler = async () => {
 		await sendPost(Endpoints.game.register);
-		this.props.refetch();
+		refetch();
 	};
 
-	render(): ReactNode {
-		return (
-			<div>
-				<h2>You {this.props.data.registered ? 'are' : 'are not'} registered</h2>
-				<a className="btn btn-primary mt-3" onClick={() => this.registerBtnHandler()}>
-					{!this.props.data.registered ? 'Register' : 'Unregister'}
-				</a>
-			</div>
-		);
-	}
-}
+	if (isLoading) return <LoaderComponent />;
+	if (isError || !data) return <FetchErrorComponent />;
 
-export default useFetchableComponent(RegistrationComponent);
+	return (
+		<div>
+			<h2>You {data.registered ? 'are' : 'are not'} registered</h2>
+			<a className="btn btn-primary mt-3" onClick={() => registerBtnHandler()}>
+				{!data.registered ? 'Register' : 'Unregister'}
+			</a>
+		</div>
+	);
+};
+
+export default RegistrationComponent;
