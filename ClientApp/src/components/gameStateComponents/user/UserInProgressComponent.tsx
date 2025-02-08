@@ -17,7 +17,7 @@ const PlayerAliveComponent = (props: { playerAlive: boolean | null }) => {
 
 const GameProgressComponent = () => {
 	const { data, isLoading, isError, refetch } = useDataFetch(fetchGameProgress);
-	const _1 = refetch;
+	const _ = refetch;
 
 	if (isLoading) {
 		return <LoaderComponent />;

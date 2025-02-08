@@ -1,3 +1,4 @@
+import GameWinnerComponent from '@/components/GameWinnerComponent';
 import Endpoints from '@/endpoints';
 import { sendPost } from '@/utils/fetchUtils';
 
@@ -13,7 +14,7 @@ const AdminFinishedComponent = () => {
 		<div>
 			<div>
 				<span>Game has finished</span>
-				<span>And the winner is: [name]!!11!!1oneone!</span>
+				<GameWinnerComponent />
 			</div>
 			<div>
 				<a className="btn btn-primary mt-3" onClick={() => createNewGame()}>

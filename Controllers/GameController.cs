@@ -130,6 +130,9 @@ public class GameController : ControllerBase
 			return NotFound();
 		}
 
-		return Ok(finishedState.Winner.FullName);
+		return Ok(new GameWinnerDto
+		{
+			WinnerName = finishedState.Winner.FullName
+		});
 	}
 }

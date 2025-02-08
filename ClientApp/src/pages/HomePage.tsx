@@ -1,6 +1,7 @@
 import ButtonWithNavigation from '@/components/ButtonWithNavigation';
 import GameStateComponent from '@/components/GameStateComponent';
 import UserInProgressComponent from '@/components/gameStateComponents/user/UserInProgressComponent';
+import GameWinnerComponent from '@/components/GameWinnerComponent';
 import GreeterComponent from '@/components/GreeterComponent';
 import RegistrationComponent from '@/components/RegistrationComponent';
 import { WebSocketProvider } from '@/components/WebSocketProvider';
@@ -27,7 +28,12 @@ function Home() {
 					RegistrationStateComponent={<RegistrationComponent />}
 					AboutToStartStateComponent={<h1>About to start</h1>}
 					InProgressStateComponent={<UserInProgressComponent />}
-					FinishedStateComponent={<h1>Finished state</h1>}
+					FinishedStateComponent={
+						<div>
+							<h1>Finished state</h1>
+							<GameWinnerComponent />
+						</div>
+					}
 					UnknownStateComponent={<h1>Unknown state</h1>}
 					FallbackStateComponent={<h1>Fallback state</h1>}
 				/>
