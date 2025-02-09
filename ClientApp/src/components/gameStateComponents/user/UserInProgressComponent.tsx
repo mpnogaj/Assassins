@@ -5,6 +5,7 @@ import Endpoints from '@/endpoints';
 import { useDataFetch } from '@/hooks/useDataFetch';
 import KillRequestDto from '@/types/dto/game/killRequestDto';
 import { sendPost } from '@/utils/fetchUtils';
+import { QRCodeSVG } from 'qrcode.react';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router';
 
@@ -17,11 +18,13 @@ const PlayerAliveComponent = (props: { playerAlive: boolean }) => {
 };
 
 const PlayerInfoComponent = (props: { alive: boolean; killCode: string }) => {
+	const killUrl = `${window.location.origin}/?killCode=${props.killCode}`;
+
 	return (
 		<div>
 			<PlayerAliveComponent playerAlive={props.alive} />
 			<h4>Twój kod: {props.killCode}</h4>
-			{/* QR code here */}
+			<QRCodeSVG value={killUrl} />
 		</div>
 	);
 };
