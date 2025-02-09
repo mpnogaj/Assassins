@@ -1,5 +1,6 @@
 using Microsoft.Extensions.FileProviders;
 using System.Text;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Assassins.Db;
@@ -75,6 +76,20 @@ namespace Assassins
 
 			services.AddAuthorization();
 
+			services.AddRateLimiter(options =>
+			{
+				options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+				options.AddPolicy("fixed", httpContext =>
+					RateLimitPartition.GetFixedWindowLimiter(
+						partitionKey: httpContext.GetLoggedUser()?.Id.ToString(),
+						factory: _ => new FixedWindowRateLimiterOptions()
+						{
+							PermitLimit = 1,
+							Window = TimeSpan.FromSeconds(10)
+						}));
+			});
+
 			services.AddTransient<IUserRepository, UserRepository>();
 			services.AddTransient<IPlayerRepository, PlayerRepository>();
 
@@ -113,7 +128,6 @@ namespace Assassins
 				dbContext.Users.Add(user);
 			}
 
-
 			dbContext.SaveChanges();
 		}
 
@@ -133,6 +147,8 @@ namespace Assassins
 			app.UseAuthorization();
 
 			app.UseUser();
+
+			app.UseRateLimiter();
 
 			app.MapControllerRoute(
 				name: "default",

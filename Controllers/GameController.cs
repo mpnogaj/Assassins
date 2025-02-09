@@ -4,6 +4,7 @@ using Assassins.Models;
 using Assassins.Services.GameService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace Assassins.Controllers;
 
@@ -61,6 +62,7 @@ public class GameController : ControllerBase
 	}
 
 	[HttpPost("kill")]
+	[EnableRateLimiting("fixed")]
 	public async Task<IActionResult> Kill([FromBody] KillRequestDto killRequestDto)
 	{
 		if (_gameService.GameState is not InProgressState _)
