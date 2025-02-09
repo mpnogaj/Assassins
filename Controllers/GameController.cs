@@ -22,7 +22,14 @@ public class GameController : ControllerBase
 	[HttpPost("register")]
 	public async Task<IActionResult> ToggleRegister()
 	{
-		if (HttpContext.Items[UserMiddleware.UserKey] is not User user)
+		if (_gameService.GameState is not RegistrationState _)
+		{
+			return Conflict("Invalid game state");
+		}
+
+		var user = HttpContext.GetLoggedUser();
+
+		if (user == null)
 		{
 			return Unauthorized();
 		}
@@ -56,13 +63,13 @@ public class GameController : ControllerBase
 	[HttpPost("kill")]
 	public async Task<IActionResult> Kill([FromBody] KillRequestDto killRequestDto)
 	{
-		var user = HttpContext.GetLoggedUser();
-		if (user == null)
+		if (_gameService.GameState is not InProgressState _)
 		{
-			return Unauthorized();
+			return Conflict("Invalid game state");
 		}
 
-		var player = await _gameService.GetPlayer(user);
+		var player = await GetLoggedPlayer();
+
 		if (player == null)
 		{
 			return Forbid();
@@ -89,36 +96,17 @@ public class GameController : ControllerBase
 
 	[HttpGet("progress")]
 	[Authorize]
-	public async Task<IActionResult> GetGameProgress()
+	public IActionResult GetGameProgress()
 	{
 		if (_gameService.GameState is not InProgressState inProgressState)
 		{
-			return NotFound();
-		}
-
-		var user = HttpContext.GetLoggedUser();
-
-		if (user == null)
-		{
-			return Unauthorized();
-		}
-
-		var player = await _gameService.GetPlayer(user);
-
-		if (player == null)
-		{
-			// treat user as spectator
-			return Ok(new GameProgressDto
-			{
-				AlivePlayers = inProgressState.AlivePlayers,
-				PlayerAlive = null
-			});
+			return NotFound("Invalid game state");
 		}
 
 		return Ok(new GameProgressDto
 		{
 			AlivePlayers = inProgressState.AlivePlayers,
-			PlayerAlive = player.Alive
+			TotalPlayers = inProgressState.TotalPlayers
 		});
 	}
 
@@ -127,12 +115,46 @@ public class GameController : ControllerBase
 	{
 		if (_gameService.GameState is not FinishedState finishedState)
 		{
-			return NotFound();
+			return NotFound("Invalid game state");
 		}
 
 		return Ok(new GameWinnerDto
 		{
 			WinnerName = finishedState.Winner.FullName
 		});
+	}
+
+	[HttpGet("self")]
+	public async Task<IActionResult> GetInfoSelf()
+	{
+		if (_gameService.GameState is not InProgressState _)
+		{
+			return Conflict("Invalid game state");
+		}
+
+		var player = await GetLoggedPlayer();
+
+		if (player == null)
+		{
+			return Unauthorized();
+		}
+
+		var target = await _gameService.GetTarget(player);
+
+		return Ok(new PlayerInfoDto
+		{
+			Alive = player.Alive,
+			KillCode = player.KillCode,
+			TargetName = target?.User.FullName ?? string.Empty
+		});
+	}
+
+	private async Task<Player?> GetLoggedPlayer()
+	{
+		var user = HttpContext.GetLoggedUser();
+
+		if (user == null) return null;
+
+		return await _gameService.GetPlayer(user);
 	}
 }

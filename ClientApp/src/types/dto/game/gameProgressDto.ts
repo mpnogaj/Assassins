@@ -1,6 +1,6 @@
 type GameProgressDto = {
-	playerAlive: boolean | null;
 	alivePlayers: number;
+	totalPlayers: number;
 };
 
 export default GameProgressDto;

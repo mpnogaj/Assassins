@@ -1,8 +1,9 @@
 type PlayerWithTargetDto = {
+	alive: boolean;
 	playerId: string;
-	victimId: string;
+	victimId: string | null;
 	playerFullName: string;
-	victimFullName: string;
+	victimFullName: string | null;
 };
 
 type ExtendedGameProgressDto = {

@@ -1,4 +1,5 @@
 ﻿using Assassins.Dto;
+using Assassins.Models;
 using Assassins.Services.GameService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -66,14 +67,14 @@ public class AdminController : ControllerBase
 		var playersWithTargets = await _gameService.GetPlayersWithTargets();
 
 		var playerData = playersWithTargets
-		                 .Where(player => player.Alive)
-		                 .Select(player => new ExtendedGameProgressDto.PlayerWithTargetDto
-		{
-			PlayerId = player.Id,
-			PlayerFullName = player.User.FullName,
-			VictimId = player.TargetGuid,
-			VictimFullName = player.Target.User.FullName
-		}).ToList();
+		                 .Select(playerWithTarget => new ExtendedGameProgressDto.PlayerWithTargetDto
+						 {
+							 Alive = playerWithTarget.target != null,
+							 PlayerId = playerWithTarget.player.Id,
+							 PlayerFullName = playerWithTarget.player.User.FullName,
+							 VictimId = playerWithTarget.target?.TargetGuid,
+							 VictimFullName = playerWithTarget.target?.User.FullName
+						 }).ToList();
 
 		var extendedGameProgressDto = new ExtendedGameProgressDto()
 		{

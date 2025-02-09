@@ -2,5 +2,5 @@
 
 public class KillRequestDto
 {
-	public string KillCode { get; set; }
+	public string KillCode { get; set; } = null!;
 }

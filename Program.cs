@@ -48,6 +48,7 @@ namespace Assassins
 				{
 					options.UseSqlite(configuration.GetConnectionString("Default"));
 				}
+				options.EnableSensitiveDataLogging();
 			});
 
 			services.AddAuthentication().AddJwtBearer(options =>
@@ -102,6 +103,16 @@ namespace Assassins
 				var user = new User(adminUser, BC.HashPassword(adminUser.Password), true);
 				dbContext.Users.Add(user);
 			}
+
+			var normalUsers = app.Configuration.GetNormalUsers();
+			foreach (var normalUser in normalUsers
+						 .Where(normalUser =>
+							 dbContext.Users.FirstOrDefault(user => user.Username == normalUser.Username) == null))
+			{
+				var user = new User(normalUser, BC.HashPassword(normalUser.Password));
+				dbContext.Users.Add(user);
+			}
+
 
 			dbContext.SaveChanges();
 		}

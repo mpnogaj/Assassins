@@ -58,6 +58,7 @@ const AdminInProgressComponent = () => {
 						<tr>
 							<th>Player ID</th>
 							<th>Player Name</th>
+							<th>Status</th>
 							<th>Target ID</th>
 							<th>Target Name</th>
 							<th>Actions</th>
@@ -70,12 +71,17 @@ const AdminInProgressComponent = () => {
 								<tr>
 									<th>{playerData.playerId}</th>
 									<th>{playerData.playerFullName}</th>
-									<th>{playerData.victimId}</th>
-									<th>{playerData.victimFullName}</th>
+									<th>{playerData.alive ? 'Alive' : 'KIA'}</th>
+									<th>{playerData.victimId ?? '-'}</th>
+									<th>{playerData.victimFullName ?? '-'}</th>
 									<th>
-										<a className="btn" onClick={() => adminKillPlayer(playerData.playerId)}>
-											Force kill
-										</a>
+										{playerData.alive ? (
+											<a className="btn" onClick={() => adminKillPlayer(playerData.playerId)}>
+												Force kill
+											</a>
+										) : (
+											<span>-</span>
+										)}
 									</th>
 								</tr>
 							);

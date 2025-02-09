@@ -1,6 +1,7 @@
 ﻿using Assassins.Db;
 using Assassins.Models;
 using Microsoft.EntityFrameworkCore;
+using System.Numerics;
 
 namespace Assassins.Services.Repositories.PlayerRepository;
 
@@ -16,28 +17,46 @@ public class PlayerRepository : IPlayerRepository
 	public Task<Player?> GetPlayer(Guid id)
 	{
 		return _dbContext.Players
+						 .AsNoTracking()
 						 .Include(player => player.User)
-						 .Include(player => player.Target)
 						 .FirstOrDefaultAsync(player => player.Id == id);
 	}
 
 	public Task<List<Player>> GetPlayers()
 	{
 		return _dbContext.Players
+						 .AsNoTracking()
 						 .Include(player => player.User)
-						 .Include(player => player.Target)
 						 .ToListAsync();
 	}
 
-	public Task UpdatePlayers(List<Player> players)
+	public async Task UpdatePlayers(List<Player> players)
 	{
-		foreach (var player in players)
+		await Task.WhenAll(players.Select(UpdatePlayerHelper));
+		await _dbContext.SaveChangesAsync();
+	}
+
+	public async Task UpdatePlayer(Player player)
+	{
+		await UpdatePlayerHelper(player);
+		await _dbContext.SaveChangesAsync();
+	}
+
+	private async Task UpdatePlayerHelper(Player player)
+	{
+		var entry = _dbContext.Entry(player);
+		if (entry.State == EntityState.Detached)
 		{
-			_dbContext.Players.Attach(player);
-			_dbContext.Entry(player).State = EntityState.Modified;
+			var existingEntity = await GetPlayer(player.Id);
+			if (existingEntity == null)
+			{
+				return;
+			}
+
+			_dbContext.Entry(existingEntity).CurrentValues.SetValues(player);
 		}
 
-		return _dbContext.SaveChangesAsync();
+		_dbContext.Players.Update(player);
 	}
 
 	public Task DeleteAllPlayers()

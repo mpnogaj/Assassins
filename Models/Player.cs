@@ -12,5 +12,4 @@ public class Player
 	public bool Alive { get; set; } = true;
 
 	public Guid TargetGuid { get; set; }
-	public virtual Player Target { get; set; } = null!;
 }

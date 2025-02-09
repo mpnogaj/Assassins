@@ -1,5 +1,6 @@
 ﻿using Assassins.Hub;
 using Assassins.Models;
+using Assassins.Services.JwtService;
 using Assassins.Services.Repositories.PlayerRepository;
 using Assassins.Services.Repositories.UserRepository;
 using Microsoft.AspNetCore.SignalR;
@@ -89,7 +90,7 @@ public class GameService : IGameService
 		{
 			0 => new RegistrationState(),
 			1 => new FinishedState(shuffledPlayers.First().User),
-			_ => new InProgressState(shuffledPlayers.Count)
+			_ => new InProgressState(shuffledPlayers.Count, shuffledPlayers.Count)
 		};
 	}
 
@@ -101,6 +102,13 @@ public class GameService : IGameService
 			var player = players.FirstOrDefault(player => player.User.Id == user.Id);
 			return player;
 		});
+	}
+
+	public Task<Player?> GetTarget(Player player)
+	{
+		using var scope = _serviceProvider.CreateScope();
+		var playerRepository = scope.ServiceProvider.GetRequiredService<IPlayerRepository>();
+		return playerRepository.GetPlayer(player.TargetGuid);
 	}
 
 	public Task<bool> ToggleRegisterUser(User user)
@@ -117,20 +125,25 @@ public class GameService : IGameService
 
 	public async Task<bool> AttemptKill(Player killer, string code)
 	{
-		using var scope = _serviceProvider.CreateScope();
-		var playerRepository = scope.ServiceProvider.GetRequiredService<IPlayerRepository>();
-
-		if (GameState is not InProgressState _ || killer.Target.KillCode != code)
+		if (GameState is not InProgressState _)
 		{
 			return false;
 		}
 
-		await KillPlayer(playerRepository, killer);
+		using var scope = _serviceProvider.CreateScope();
+		var playerRepository = scope.ServiceProvider.GetRequiredService<IPlayerRepository>();
+
+		await KillPlayer(playerRepository, killer, code);
 		return true;
 	}
 
 	public async Task<bool> AdminKill(Guid killerGuid)
 	{
+		if (GameState is not InProgressState _)
+		{
+			return false;
+		}
+
 		using var scope = _serviceProvider.CreateScope();
 		var playerRepository = scope.ServiceProvider.GetRequiredService<IPlayerRepository>();
 
@@ -140,11 +153,16 @@ public class GameService : IGameService
 			return false;
 		}
 
-		await KillPlayer(playerRepository, killer);
-		return true;
+		var target = await playerRepository.GetPlayer(killer.TargetGuid);
+		if (target == null)
+		{
+			return false;
+		}
+
+		return await KillPlayer(playerRepository, killer, target.KillCode);
 	}
 
-	public Task<List<Player>> GetPlayersWithTargets()
+	public async Task<List<(Player player, Player? target)>> GetPlayersWithTargets()
 	{
 		if (GameState is not InProgressState)
 		{
@@ -153,36 +171,62 @@ public class GameService : IGameService
 
 		using var scope = _serviceProvider.CreateScope();
 		var playerRepository = scope.ServiceProvider.GetRequiredService<IPlayerRepository>();
-		return playerRepository.GetPlayers();
+
+		var players = await playerRepository.GetPlayers();
+
+		var playersMap = players.ToDictionary(player => player.Id);
+
+		var playersWithTargets = players
+								 .Select(player => (player, target: playersMap.GetValueOrDefault(player.TargetGuid)))
+								 .ToList();
+
+		return playersWithTargets;
 	}
 
-	private async Task KillPlayer(IPlayerRepository playerRepository, Player killer)
+	private async Task<bool> KillPlayer(IPlayerRepository playerRepository, Player killer, string killCode)
 	{
-		var killedPlayer = killer.Target;
+		if (GameState is not InProgressState inProgressState)
+		{
+			return false;
+		}
 
-		killedPlayer.Alive = false;
+		var victim = await playerRepository.GetPlayer(killer.TargetGuid);
 
-		killer.TargetGuid = killedPlayer.TargetGuid;
-		killedPlayer.TargetGuid = killedPlayer.Id;
+		if (victim == null)
+		{
+			return false;
+		}
 
-		await playerRepository.UpdatePlayers(new List<Player> { killer, killedPlayer });
+		if (victim.KillCode != killCode)
+		{
+			return false;
+		}
+
+		killer.TargetGuid = victim.TargetGuid;
+
+		await playerRepository.UpdatePlayer(killer);
+
+		victim.Alive = false;
+		victim.TargetGuid = Guid.Empty;
+
+		await playerRepository.UpdatePlayer(victim);
 
 		var alivePlayers = (await playerRepository.GetPlayers()).Count(player => player.Alive);
 
-		GameState = new InProgressState(alivePlayers);
-
-		var players = await playerRepository.GetPlayers();
+		GameState = new InProgressState(alivePlayers, inProgressState.TotalPlayers);
 
 		if (alivePlayers == 1)
 		{
 			FinishGame(killer.User);
-			return;
+			return true;
 		}
 
 		GetServiceFromScope<IHubContext<AssassinsHub, IAssassinsClient>>(hub =>
 		{
 			hub.Clients.All.NotifyKillHappened();
 		});
+
+		return true;
 	}
 
 	private void FinishGame(User winner)

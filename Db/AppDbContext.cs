@@ -25,9 +25,6 @@ public class AppDbContext : DbContext
 		{
 			entity.HasKey(player => player.Id);
 			entity.HasOne<User>(player => player.User);
-			entity.HasOne<Player>(player => player.Target)
-			      .WithOne()
-			      .HasForeignKey<Player>(player => player.TargetGuid);
 		});
 
 		modelBuilder.Entity<Announcement>(entity =>

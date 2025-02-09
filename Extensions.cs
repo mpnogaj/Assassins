@@ -1,4 +1,6 @@
 ﻿using Assassins.Dto;
+using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Assassins;
 
@@ -6,14 +8,24 @@ public static class Extensions
 {
 	public static List<UserRegisterDto> GetAdminUsers(this IConfiguration configuration)
 	{
-		var adminUsersSection = configuration.GetSection("AdminUsers");
+		return ExtractUsersFromConfigSection(configuration, "AdminUsers");
+	}
 
-		return adminUsersSection.GetChildren().Select(adminUserSection =>
+	public static List<UserRegisterDto> GetNormalUsers(this IConfiguration configuration)
+	{
+		return ExtractUsersFromConfigSection(configuration, "NormalUsers");
+	}
+
+	public static List<UserRegisterDto> ExtractUsersFromConfigSection(this IConfiguration configuration, string sectionName)
+	{
+		var usersSection = configuration.GetSection(sectionName);
+
+		return usersSection.GetChildren().Select(userSection =>
 		{
-			var firstName = adminUserSection["FirstName"];
-			var lastName = adminUserSection["LastName"];
-			var username = adminUserSection["Username"];
-			var password = adminUserSection["Password"];
+			var firstName = userSection["FirstName"];
+			var lastName = userSection["LastName"];
+			var username = userSection["Username"];
+			var password = userSection["Password"];
 
 			if (firstName == null || lastName == null || username == null || password == null)
 			{

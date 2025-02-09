@@ -17,9 +17,11 @@ public interface IGameService
 	/// <param name="user"></param>
 	/// <returns></returns>
 	public Task<Player?> GetPlayer(User user);
+
+	public Task<Player?> GetTarget(Player player);
 	public Task<bool> ToggleRegisterUser(User user);
 	public Task<bool> AttemptKill(Player killer, string code);
 	public Task<bool> AdminKill(Guid killerGuid);
 
-	public Task<List<Player>> GetPlayersWithTargets();
+	public Task<List<(Player player, Player? target)>> GetPlayersWithTargets();
 }
