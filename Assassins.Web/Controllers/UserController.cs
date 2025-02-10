@@ -2,6 +2,7 @@
 using Assassins.Web.Middlewares;
 using Assassins.Web.Models;
 using Assassins.Web.Services.JwtService;
+using Assassins.Web.Services.RecaptchaService;
 using Assassins.Web.Services.UserService;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -14,11 +15,13 @@ namespace Assassins.Web.Controllers
 	{
 		private readonly IUserService _userService;
 		private readonly IJwtService _jwtService;
+		private readonly IRecaptchaService _recaptchaService;
 
-		public UserController(IUserService userService, IJwtService jwtService)
+		public UserController(IUserService userService, IJwtService jwtService, IRecaptchaService recaptchaService)
 		{
 			_userService = userService;
 			_jwtService = jwtService;
+			_recaptchaService = recaptchaService;
 		}
 
 		[HttpPost("login")]
@@ -36,6 +39,13 @@ namespace Assassins.Web.Controllers
 		[HttpPost("register")]
 		public async Task<IActionResult> Register([FromBody] UserRegisterDto userRegisterDto)
 		{
+			var recaptchaResult = await _recaptchaService.ValidateRecaptcha(userRegisterDto.RecaptchaToken);
+
+			if (!recaptchaResult)
+			{
+				return Forbid();
+			}
+
 			var user = await _userService.Register(userRegisterDto);
 
 			if (user == null)

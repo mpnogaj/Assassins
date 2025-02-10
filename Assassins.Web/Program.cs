@@ -14,6 +14,7 @@ using Assassins.Web.Services.Repositories.UserRepository;
 using Assassins.Web.Middlewares;
 using Assassins.Web.Hub;
 using Assassins.Web.Models;
+using Assassins.Web.Services.RecaptchaService;
 
 namespace Assassins.Web
 {
@@ -25,31 +26,13 @@ namespace Assassins.Web
 
 	public partial class Program
 	{
-		public static bool IsDebug
-		{
-			get
-			{
-#if DEBUG
-				return true;
-#else
-				return false;
-#endif
-			}
-		}
-
 		private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
 		{
+			services.AddHttpClient();
+
 			services.AddDbContext<AppDbContext>(options =>
 			{
-				if (IsDebug)
-				{
-					options.UseInMemoryDatabase("Default");
-				}
-				else
-				{
-					options.UseSqlite(configuration.GetConnectionString("Default"));
-				}
-				options.EnableSensitiveDataLogging();
+				options.UseSqlite(configuration.GetConnectionString("Default"));
 			});
 
 			services.AddAuthentication().AddJwtBearer(options =>
@@ -94,6 +77,7 @@ namespace Assassins.Web
 			services.AddTransient<IPlayerRepository, PlayerRepository>();
 
 			services.AddTransient<IJwtService, JwtService>();
+			services.AddTransient<IRecaptchaService, RecaptchaService>();
 			services.AddTransient<IUserService, UserService>();
 
 			services.AddSingleton<IGameService, GameService>();
@@ -109,6 +93,7 @@ namespace Assassins.Web
 
 			using var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 			dbContext.Database.EnsureCreated();
+
 			var adminUsers = app.Configuration.GetAdminUsers();
 
 			foreach (var adminUser in adminUsers
