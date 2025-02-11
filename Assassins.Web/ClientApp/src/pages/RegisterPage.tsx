@@ -5,10 +5,12 @@ import { empty } from '@/types/other';
 import { sendPost } from '@/utils/fetchUtils';
 import { ACTION, RECAPTCHA_SCRIPT_ID, SITE_KEY } from '@/utils/recaptcha';
 import React from 'react';
+import toast from 'react-hot-toast';
 
 type State = {
 	username: string;
 	password: string;
+	passwordConfirmation: string;
 	firstName: string;
 	lastName: string;
 };
@@ -22,6 +24,7 @@ class RegisterPage extends NavComponent<empty, State> {
 		this.state = {
 			username: '',
 			password: '',
+			passwordConfirmation: '',
 			firstName: '',
 			lastName: ''
 		};
@@ -54,7 +57,7 @@ class RegisterPage extends NavComponent<empty, State> {
 
 	registerHandler = async () => {
 		if (!window.grecaptcha) {
-			console.error('reCAPTCHA not loaded yet.');
+			toast.error('reCAPTCHA not loaded yet. Please try again after few seconds');
 			return;
 		}
 
@@ -74,7 +77,7 @@ class RegisterPage extends NavComponent<empty, State> {
 			const result = await sendPost(Endpoints.user.register, payload);
 			if (result.ok) this.props.navigate('/');
 		} catch {
-			/* empty */
+			toast.error('Something went wrong. Please try again');
 		}
 	};
 
@@ -134,6 +137,18 @@ class RegisterPage extends NavComponent<empty, State> {
 							value={this.state.password}
 							onChange={event => {
 								this.setState({ password: event.target.value });
+							}}
+						/>
+					</div>
+					<div className="form-group">
+						<label>Confirm password: </label>
+						<input
+							required
+							className="form-control"
+							type="password"
+							value={this.state.passwordConfirmation}
+							onChange={event => {
+								this.setState({ passwordConfirmation: event.target.value });
 							}}
 						/>
 					</div>
