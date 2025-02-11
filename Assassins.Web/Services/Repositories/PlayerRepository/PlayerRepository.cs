@@ -17,7 +17,6 @@ public class PlayerRepository : IPlayerRepository
 	public Task<Player?> GetPlayer(Guid id)
 	{
 		return _dbContext.Players
-						 .AsNoTracking()
 						 .Include(player => player.User)
 						 .FirstOrDefaultAsync(player => player.Id == id);
 	}
@@ -25,7 +24,6 @@ public class PlayerRepository : IPlayerRepository
 	public Task<List<Player>> GetPlayers()
 	{
 		return _dbContext.Players
-						 .AsNoTracking()
 						 .Include(player => player.User)
 						 .ToListAsync();
 	}

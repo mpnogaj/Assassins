@@ -2,6 +2,8 @@
 using Assassins.Web.Middlewares;
 using Assassins.Web.Models;
 using Assassins.Web.Services.GameService;
+using Assassins.Web.Services.GameService.GameServiceErrors;
+using Assassins.Web.Utils;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
@@ -21,72 +23,58 @@ public class GameController : ControllerBase
 	}
 
 	[HttpPost("register")]
-	public async Task<IActionResult> ToggleRegister()
+	public Task<IActionResult> ToggleRegister()
 	{
 		if (_gameService.GameState is not RegistrationState _)
 		{
-			return Conflict("Invalid game state");
+			return Task.FromResult<IActionResult>(Conflict("Invalid game state"));
 		}
 
-		var user = HttpContext.GetLoggedUser();
+		return HttpContext.GetLoggedUser().MatchAsync(
+			onSuccess: async (user) =>
+			{
+				var toggleRegisterResult = await _gameService.ToggleRegisterUser(user);
 
-		if (user == null)
-		{
-			return Unauthorized();
-		}
-
-		var registrationSuccessful = await _gameService.ToggleRegisterUser(user);
-
-		if (!registrationSuccessful)
-		{
-			return Forbid();
-		}
-
-		return Ok();
+				return toggleRegisterResult.Match<IActionResult>(
+					onSuccess: () => Ok(),
+					onFailure: (_) => Forbid());
+			},
+			onFailure: (_) => Unauthorized());
 	}
 
 	[HttpGet("register")]
 	public IActionResult IsRegistered()
 	{
-		var user = HttpContext.GetLoggedUser();
-
-		if (user == null)
-		{
-			return Unauthorized();
-		}
-
-		return Ok(new RegistrationStatusDto()
-		{
-			Registered = user.Registered
-		});
+		return HttpContext.GetLoggedUser().Match<IActionResult>(
+			onSuccess: (user) => Ok(new RegistrationStatusDto
+			{
+				Registered = user.Registered
+			}),
+			onFailure: (_) => Unauthorized());
 	}
 
 	[HttpPost("kill")]
 	[EnableRateLimiting("fixed")]
 	public async Task<IActionResult> Kill([FromBody] KillRequestDto killRequestDto)
 	{
-		if (_gameService.GameState is not InProgressState _)
-		{
-			return Conflict("Invalid game state");
-		}
+		var getLoggedPlayerResult = await GetLoggedPlayer();
 
-		var player = await GetLoggedPlayer();
-
-		if (player == null)
-		{
-			return Forbid();
-		}
-
-		var killSuccessful = await _gameService.AttemptKill(player, killRequestDto.KillCode);
-
-		if (killSuccessful)
-		{
-			return Ok();
-		}
-		else
-		{
-			return Forbid();
-		}
+		return await getLoggedPlayerResult.MatchAsync(
+			onSuccess: async (player) =>
+			{
+				var killResult = await _gameService.AttemptKill(player, killRequestDto.KillCode);
+				return killResult.Match<IActionResult>(
+					onSuccess: () => Ok(),
+					onFailure: error => error switch
+					{
+						KillErrors.GameIsNotInProgressError => Conflict("Invalid game state"),
+						KillErrors.KillerNotFound => NotFound("Killer not found"),
+						KillErrors.TargetNotFound => NotFound("Target not found"),
+						KillErrors.InvalidKillCode => StatusCode(StatusCodes.Status403Forbidden, "Invalid kill code"),
+						_ => Problem("An unknown error occurred", statusCode: StatusCodes.Status500InternalServerError)
+					});
+			},
+			onFailure: (_) => Forbid());
 	}
 
 	[HttpGet("state")]
@@ -115,48 +103,60 @@ public class GameController : ControllerBase
 	[HttpGet("winner")]
 	public IActionResult GetWinner()
 	{
-		if (_gameService.GameState is not FinishedState finishedState)
-		{
-			return NotFound("Invalid game state");
-		}
-
-		return Ok(new GameWinnerDto
-		{
-			WinnerName = finishedState.Winner.FullName
-		});
+		return _gameService.GetWinner().Match<IActionResult>(
+			onSuccess: (winner) => Ok(new GameWinnerDto
+			{
+				WinnerName = winner.FullName
+			}),
+			onFailure: (error) => error switch
+			{
+				GetWinnerErrors.InvalidGameStateError => NotFound("Invalid game state"),
+				_ => Problem("An unknown error occurred", statusCode: StatusCodes.Status500InternalServerError)
+			});
 	}
 
 	[HttpGet("self")]
 	public async Task<IActionResult> GetInfoSelf()
 	{
-		if (_gameService.GameState is not InProgressState _)
-		{
-			return Conflict("Invalid game state");
-		}
+		var playerResult = await GetLoggedPlayer();
 
-		var player = await GetLoggedPlayer();
+		return await playerResult.MatchAsync(
+			onSuccess: async (player) =>
+			{
+				var targetResult = await _gameService.GetTarget(player);
 
-		if (player == null)
-		{
-			return Unauthorized();
-		}
-
-		var target = await _gameService.GetTarget(player);
-
-		return Ok(new PlayerInfoDto
-		{
-			Alive = player.Alive,
-			KillCode = player.KillCode,
-			TargetName = target?.User.FullName ?? string.Empty
-		});
+				return targetResult.Match<IActionResult>(
+					onSuccess: target => Ok(new PlayerInfoDto
+					{
+						Alive = player.Alive,
+						KillCode = player.KillCode,
+						TargetName = target.User.FullName
+					}),
+					onFailure: error => error switch
+					{
+						GetTargetErrors.TargetUserNotFound => Ok(new PlayerInfoDto
+						{
+							Alive = player.Alive,
+							KillCode = player.KillCode,
+							TargetName = string.Empty
+						}),
+						_ => Problem("An unknown error occurred", statusCode: StatusCodes.Status500InternalServerError)
+					}
+				);
+			},
+			onFailure: (error) => error switch
+			{
+				GetPlayerErrors.UserNotLoggedIn => Unauthorized(),
+				GetPlayerErrors.UserDoesNotTakePartInGameError => NotFound("Couldn't find player"),
+				GetPlayerErrors.InvalidGameStateError => Conflict("Invalid game state"),
+				_ => Problem("An unknown error occurred", statusCode: StatusCodes.Status500InternalServerError)
+			});
 	}
 
-	private async Task<Player?> GetLoggedPlayer()
+	private Task<Result<Player, GetPlayerErrors>> GetLoggedPlayer()
 	{
-		var user = HttpContext.GetLoggedUser();
-
-		if (user == null) return null;
-
-		return await _gameService.GetPlayer(user);
+		return HttpContext.GetLoggedUser().MatchAsync(
+			onSuccess: (user) => _gameService.GetPlayer(user),
+			onFailure: (error) => Result<Player, GetPlayerErrors>.Failure(GetPlayerErrors.UserNotLoggedIn));
 	}
 }

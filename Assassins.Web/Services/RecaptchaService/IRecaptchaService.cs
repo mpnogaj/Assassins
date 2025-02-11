@@ -1,6 +1,8 @@
-﻿namespace Assassins.Web.Services.RecaptchaService;
+﻿using Assassins.Web.Utils;
+
+namespace Assassins.Web.Services.RecaptchaService;
 
 public interface IRecaptchaService
 {
-	public Task<bool> ValidateRecaptcha(string token);
+	public Task<Result<RecaptchaServiceErrors>> ValidateRecaptcha(string token);
 }

@@ -33,6 +33,7 @@ namespace Assassins.Web
 			services.AddDbContext<AppDbContext>(options =>
 			{
 				options.UseSqlite(configuration.GetConnectionString("Default"));
+				options.EnableSensitiveDataLogging();
 			});
 
 			services.AddAuthentication().AddJwtBearer(options =>
@@ -65,7 +66,9 @@ namespace Assassins.Web
 
 				options.AddPolicy("fixed", httpContext =>
 					RateLimitPartition.GetFixedWindowLimiter(
-						partitionKey: httpContext.GetLoggedUser()?.Id.ToString(),
+						partitionKey: httpContext.GetLoggedUser().Match(
+							onSuccess: (user) => user.Id.ToString(),
+							onFailure: (_) => string.Empty),
 						factory: _ => new FixedWindowRateLimiterOptions()
 						{
 							PermitLimit = 1,
@@ -80,7 +83,7 @@ namespace Assassins.Web
 			services.AddTransient<IRecaptchaService, RecaptchaService>();
 			services.AddTransient<IUserService, UserService>();
 
-			services.AddSingleton<IGameService, GameService>();
+			services.AddTransient<IGameService, GameService>();
 
 			services.AddControllers();
 
@@ -125,6 +128,11 @@ namespace Assassins.Web
 			var app = builder.Build();
 
 			EnsureDb(app);
+
+			using (var scope = app.Services.CreateScope())
+			{
+				scope.ServiceProvider.GetRequiredService<IGameService>().OpenRegistration();
+			}
 
 			app.UseRouting();
 

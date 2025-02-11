@@ -1,6 +1,7 @@
 ﻿using System.Security.Claims;
 using Assassins.Web.Models;
 using Assassins.Web.Services.Repositories.UserRepository;
+using Assassins.Web.Utils;
 
 namespace Assassins.Web.Middlewares;
 
@@ -42,8 +43,10 @@ public static class UserMiddlewareExtensions
 		return app;
 	}
 
-	public static User? GetLoggedUser(this HttpContext httpContext)
+	public static Result<User, string> GetLoggedUser(this HttpContext httpContext)
 	{
-		return httpContext.Items[UserMiddleware.UserKey] as User;
+		return httpContext.Items[UserMiddleware.UserKey] is User user
+			? Result<User, string>.Success(user)
+			: Result<User, string>.Failure("User object does not exist");
 	}
 }

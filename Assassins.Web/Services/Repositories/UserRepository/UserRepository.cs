@@ -23,9 +23,9 @@ public class UserRepository : IUserRepository
 		return _dbContext.Users.FirstOrDefaultAsync(x => x.Username == username);
 	}
 
-	public Task<List<User>> GetRegisteredUsers()
+	public async Task<List<User>> GetRegisteredUsers()
 	{
-		return _dbContext.Users.Where(user => user.Registered && !user.IsAdmin).ToListAsync();
+		return (await GetUsers()).Where(user => user.Registered).ToList();
 	}
 
 	public Task CreateUser(User user)
@@ -34,22 +34,36 @@ public class UserRepository : IUserRepository
 		return _dbContext.SaveChangesAsync();
 	}
 
-	public Task UpdateUsers(List<User> users)
+	public async Task UpdateUsers(List<User> users)
 	{
 		foreach (var user in users)
 		{
-			_dbContext.Users.Attach(user);
-			_dbContext.Entry(user).State = EntityState.Modified;
+			await UpdateUserHelper(user);
 		}
 
-		return _dbContext.SaveChangesAsync();
+		await _dbContext.SaveChangesAsync();
 	}
 
-	public Task UpdateUser(User user)
+	public async Task UpdateUser(User user)
 	{
-		_dbContext.Users.Attach(user);
-		_dbContext.Entry(user).State = EntityState.Modified;
+		await UpdateUserHelper(user);
+		await _dbContext.SaveChangesAsync();
+	}
 
-		return _dbContext.SaveChangesAsync();
+	private async Task UpdateUserHelper(User user)
+	{
+		var entry = _dbContext.Entry(user);
+		if (entry.State == EntityState.Detached)
+		{
+			var existingEntity = await GetUser(user.Username);
+			if (existingEntity == null)
+			{
+				return;
+			}
+
+			_dbContext.Entry(existingEntity).CurrentValues.SetValues(user);
+		}
+
+		_dbContext.Users.Update(user);
 	}
 }

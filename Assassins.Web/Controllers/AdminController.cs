@@ -1,5 +1,6 @@
 ﻿using Assassins.Web.Dto;
 using Assassins.Web.Services.GameService;
+using Assassins.Web.Services.GameService.GameServiceErrors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -87,17 +88,19 @@ public class AdminController : ControllerBase
 	[HttpPost("kill")]
 	public async Task<IActionResult> AdminKill([FromBody] AdminKillDto adminKillDto)
 	{
-		if (_gameService.GameState is not InProgressState _)
-		{
-			return Conflict();
-		}
+		var killResult = await _gameService.AdminKill(adminKillDto.PlayerGuid);
 
-		var successful = await _gameService.AdminKill(adminKillDto.PlayerGuid);
-
-		if (!successful)
-		{
-			return NotFound();
-		}
-		return Ok();
+		return killResult.Match<IActionResult>(
+			onSuccess: () => Ok(),
+			onFailure: (error) => error switch
+			{
+				KillErrors.KillerNotFound => NotFound("Killer not found"),
+				KillErrors.TargetNotFound => NotFound("Target not found"),
+				KillErrors.GameIsNotInProgressError => Conflict("Invalid game state"),
+				KillErrors.InvalidKillCode =>
+					StatusCode(StatusCodes.Status500InternalServerError,
+						"Invalid kill code when admin kill. Contact admin, this should happen"),
+				_ => Problem("An unknown error occurred", statusCode: StatusCodes.Status500InternalServerError)
+			});
 	}
 }

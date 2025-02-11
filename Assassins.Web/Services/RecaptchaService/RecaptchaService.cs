@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using Assassins.Web.Utils;
 
 namespace Assassins.Web.Services.RecaptchaService;
 
@@ -6,18 +7,6 @@ public class RecaptchaService : IRecaptchaService
 {
 	private readonly IConfiguration _configuration;
 	private readonly IHttpClientFactory _httpClientFactory;
-
-	private class RecaptchaRequestBody
-	{
-		[JsonPropertyName("secret")]
-		public string Secret { get; set; } = null!;
-
-		[JsonPropertyName("response")]
-		public string Response { get; set; } = null!;
-
-		[JsonPropertyName("remoteip")]
-		public string? RemoteIp { get; set; } = null;
-	}
 
 	private class RecaptchaResponseBody
 	{
@@ -35,28 +24,34 @@ public class RecaptchaService : IRecaptchaService
 		_httpClientFactory = httpClientFactory;
 	}
 
-	public async Task<bool> ValidateRecaptcha(string token)
+	public async Task<Result<RecaptchaServiceErrors>> ValidateRecaptcha(string token)
 	{
 		var recaptchaSecret = _configuration["Recaptcha:SecretKey"];
 		if (recaptchaSecret == null)
 		{
-			return false;
+			return Result<RecaptchaServiceErrors>.Failure(RecaptchaServiceErrors.RecaptchaSecretMissingError);
 		}
 
 		var httpClient = _httpClientFactory.CreateClient();
 
-		var validationResult = await httpClient.PostAsync("https://www.google.com/recaptcha/api/siteverify", new FormUrlEncodedContent(new[]
+		var verificationResult =
+			await httpClient.PostAsync("https://www.google.com/recaptcha/api/siteverify",
+				new FormUrlEncodedContent(new[]
 		{
 			new KeyValuePair<string, string>("secret", recaptchaSecret),
 			new KeyValuePair<string, string>("response", token)
 		}));
 
-		if (!validationResult.IsSuccessStatusCode)
+		if (!verificationResult.IsSuccessStatusCode)
 		{
-			return false;
+			return Result<RecaptchaServiceErrors>.Failure(RecaptchaServiceErrors.VerificationApiReturnedNonSuccessStatusCode);
 		}
 
-		var responseBody = await validationResult.Content.ReadFromJsonAsync<RecaptchaResponseBody>();
-		return responseBody?.Success ?? false;
+		var verificationBody = await verificationResult.Content.ReadFromJsonAsync<RecaptchaResponseBody>();
+		var verificationSuccess = verificationBody?.Success ?? false;
+
+		return verificationSuccess
+			? Result<RecaptchaServiceErrors>.Success()
+			: Result<RecaptchaServiceErrors>.Failure(RecaptchaServiceErrors.VerificationFailed);
 	}
 }
