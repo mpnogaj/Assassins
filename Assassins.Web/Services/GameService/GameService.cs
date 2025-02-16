@@ -1,8 +1,8 @@
 ﻿using Assassins.Web.Hub;
 using Assassins.Web.Models;
+using Assassins.Web.Repositories.PlayerRepository;
+using Assassins.Web.Repositories.UserRepository;
 using Assassins.Web.Services.GameService.GameServiceErrors;
-using Assassins.Web.Services.Repositories.PlayerRepository;
-using Assassins.Web.Services.Repositories.UserRepository;
 using Assassins.Web.Utils;
 using Microsoft.AspNetCore.SignalR;
 
@@ -82,6 +82,31 @@ public class GameService : IGameService
 			1 => new FinishedState(shuffledPlayers.First().User),
 			_ => new InProgressState(shuffledPlayers.Count, shuffledPlayers.Count)
 		};
+	}
+
+	public async Task<Result<List<User>, GetRegisteredUsersErrors>> GetRegisteredUsers()
+	{
+		if (GameState is not (AboutToStartState or RegistrationState))
+		{
+			return Result<List<User>, GetRegisteredUsersErrors>.Failure(GetRegisteredUsersErrors.InvalidGameState);
+		}
+
+		var registeredUsers = await _userRepository.GetRegisteredUsers();
+
+		return Result<List<User>, GetRegisteredUsersErrors>.Success(registeredUsers);
+	}
+
+	public async Task<Result<KickUserErrors>> KickUser(Guid userId)
+	{
+		var user = await _userRepository.GetUser(userId);
+		if (user == null)
+		{
+			return Result<KickUserErrors>.Failure(KickUserErrors.UserWithGivenIdNotFound);
+		}
+
+		user.Registered = false;
+		await _userRepository.UpdateUser(user);
+		return Result<KickUserErrors>.Success();
 	}
 
 	public async Task<Result<Player, GetPlayerErrors>> GetPlayer(User user)

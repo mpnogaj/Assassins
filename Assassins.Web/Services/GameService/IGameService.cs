@@ -12,6 +12,9 @@ public interface IGameService
 	public Task CloseRegistration();
 	public Task StartGame();
 
+	public Task<Result<List<User>, GetRegisteredUsersErrors>> GetRegisteredUsers();
+	public Task<Result<KickUserErrors>> KickUser(Guid userId);
+
 	public Task<Result<Player, GetPlayerErrors>> GetPlayer(User user);
 	public Task<Result<Player, GetTargetErrors>> GetTarget(Player player);
 	public Result<User, GetWinnerErrors> GetWinner();

@@ -1,3 +1,4 @@
+import Announcements from '@/components/AnnouncementsComponent';
 import GameStateComponent from '@/components/GameStateComponent';
 import UserInProgressComponent from '@/components/gameStateComponents/user/UserInProgressComponent';
 import GameWinnerComponent from '@/components/GameWinnerComponent';
@@ -19,6 +20,15 @@ function Home() {
 	return (
 		<div className="flex min-h-screen min-w-screen items-center justify-center bg-gray-900">
 			<div className="w-full max-w-2xl rounded-lg bg-gray-800 p-5 shadow-lg">
+				<div className="flex align-top justify-end">
+					<button
+						className="px-4 py-2 rounded-lg text-white font-medium transition-all 
+                   bg-red-500 hover:bg-red-600 active:bg-red-700 focus:outline-none"
+						onClick={logout}
+					>
+						Logout
+					</button>
+				</div>
 				<GreeterComponent />
 				<WebSocketProvider>
 					<GameStateComponent
@@ -37,15 +47,7 @@ function Home() {
 						FallbackStateComponent={<h1>Fallback state</h1>}
 					/>
 				</WebSocketProvider>
-				<div className="flex align-center justify-end">
-					<button
-						className="px-4 py-2 rounded-lg text-white font-medium transition-all 
-                   bg-red-500 hover:bg-red-600 active:bg-red-700 focus:outline-none"
-						onClick={logout}
-					>
-						Logout
-					</button>
-				</div>
+				<Announcements showDeleteButton={false} />
 			</div>
 		</div>
 	);

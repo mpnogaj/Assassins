@@ -2,7 +2,7 @@
 using Assassins.Web.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace Assassins.Web.Services.Repositories.UserRepository;
+namespace Assassins.Web.Repositories.UserRepository;
 
 public class UserRepository : IUserRepository
 {
@@ -21,6 +21,11 @@ public class UserRepository : IUserRepository
 	public Task<User?> GetUser(string username)
 	{
 		return _dbContext.Users.FirstOrDefaultAsync(x => x.Username == username);
+	}
+
+	public Task<User?> GetUser(Guid id)
+	{
+		return _dbContext.Users.FirstOrDefaultAsync(x => x.Id == id);
 	}
 
 	public async Task<List<User>> GetRegisteredUsers()

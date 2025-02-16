@@ -55,6 +55,41 @@ public class AdminController : ControllerBase
 		return Ok();
 	}
 
+	[HttpGet("registeredUsers")]
+	public async Task<IActionResult> GetRegisteredUsers()
+	{
+		var registeredUsersResult = await _gameService.GetRegisteredUsers();
+
+		return registeredUsersResult.Match<IActionResult>(
+			onSuccess: (users) => Ok(new ParticipantsDto
+			{
+				Participants = users.Select(user => new ParticipantsDto.UserInfoDto()
+				{
+					Id = user.Id,
+					FullName = user.FullName
+				}).ToList()
+			}),
+			onFailure: (error) => error switch
+			{
+				GetRegisteredUsersErrors.InvalidGameState => Conflict("Invalid game state"),
+				_ => throw new ArgumentOutOfRangeException(nameof(error), error, null)
+			});
+	}
+
+	[HttpPost("kickUser")]
+	public async Task<IActionResult> KickUser([FromBody] KickUserDto kickUserDto)
+	{
+		var kickUserResult = await _gameService.KickUser(kickUserDto.UserId);
+		return kickUserResult.Match<IActionResult>(
+			onSuccess: () => Ok(),
+			onFailure: (error) => error switch
+			{
+				KickUserErrors.UserWithGivenIdNotFound => NotFound("User not found"),
+				_ => throw new ArgumentOutOfRangeException(nameof(error), error, null)
+			}
+		);
+	}
+
 	[HttpGet("extendedProgress")]
 	public async Task<IActionResult> GetExtendedGameProgress()
 	{
@@ -72,7 +107,7 @@ public class AdminController : ControllerBase
 							 Alive = playerWithTarget.target != null,
 							 PlayerId = playerWithTarget.player.Id,
 							 PlayerFullName = playerWithTarget.player.User.FullName,
-							 VictimId = playerWithTarget.target?.TargetGuid,
+							 VictimId = playerWithTarget.target?.Id,
 							 VictimFullName = playerWithTarget.target?.User.FullName
 						 }).ToList();
 

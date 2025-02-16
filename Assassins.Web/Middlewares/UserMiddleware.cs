@@ -1,6 +1,6 @@
 ﻿using System.Security.Claims;
 using Assassins.Web.Models;
-using Assassins.Web.Services.Repositories.UserRepository;
+using Assassins.Web.Repositories.UserRepository;
 using Assassins.Web.Utils;
 
 namespace Assassins.Web.Middlewares;

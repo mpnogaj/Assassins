@@ -1,6 +1,7 @@
 Assassins.Web/appsettings.Production.json
 Assassins.Web/ClientApp/dist
 App.db*
+DevApp.db*
 
 *.csproj.user
 
