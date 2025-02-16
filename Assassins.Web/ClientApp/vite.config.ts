@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import * as path from 'path';
 
 // https://vite.dev/config/
@@ -14,5 +15,5 @@ export default defineConfig({
 		},
 		extensions: ['.tsx', '.ts', '.jsx', '.js'] // Vite automatically handles extensions, so the ellipsis (`"..."`) is not required
 	},
-	plugins: [react()]
+	plugins: [tailwindcss(), react()]
 });

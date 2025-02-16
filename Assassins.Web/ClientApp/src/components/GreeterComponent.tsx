@@ -12,8 +12,8 @@ const GreeterComponent = () => {
 	if (isError || !data) return <FetchErrorComponent />;
 
 	return (
-		<div>
-			<h1>Hej {data.fullName} - Walcz synu!</h1>
+		<div className="text-center text-2xl text-white mb-5">
+			<h1 className="font-bold">Hej {data.fullName} - Walcz synu!</h1>
 		</div>
 	);
 };
