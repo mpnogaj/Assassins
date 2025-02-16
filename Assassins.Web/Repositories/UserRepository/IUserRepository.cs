@@ -1,11 +1,12 @@
 ﻿using Assassins.Web.Models;
 
-namespace Assassins.Web.Services.Repositories.UserRepository;
+namespace Assassins.Web.Repositories.UserRepository;
 
 public interface IUserRepository
 {
 	public Task<List<User>> GetUsers();
 	public Task<User?> GetUser(string username);
+	public Task<User?> GetUser(Guid id);
 
 	public Task<List<User>> GetRegisteredUsers();
 

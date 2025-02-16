@@ -1,6 +1,6 @@
 ﻿using Assassins.Web.Dto;
 using Assassins.Web.Models;
-using Assassins.Web.Services.Repositories.UserRepository;
+using Assassins.Web.Repositories.UserRepository;
 using Assassins.Web.Utils;
 using BC = BCrypt.Net.BCrypt;
 

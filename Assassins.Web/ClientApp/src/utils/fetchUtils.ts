@@ -18,3 +18,13 @@ export const sendGet = async <T>(endpoint: string): Promise<T | undefined> => {
 		return undefined;
 	}
 };
+
+export const sendDelete = (endpoint: string, json: unknown | undefined = undefined) => {
+	return fetch(createEndpoint(endpoint), {
+		headers: {
+			'Content-Type': 'application/json'
+		},
+		method: 'DELETE',
+		body: JSON.stringify(json)
+	});
+};
