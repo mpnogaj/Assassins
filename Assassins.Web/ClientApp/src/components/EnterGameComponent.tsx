@@ -20,12 +20,12 @@ const EnterGameComponent = () => {
 
 	return (
 		<div className="text-center p-4 m-0">
-			<h2 className="text-xl font-semibold">
+			<h2 className="text-xl font-semibold text-gray-400">
 				Participation: {data.registered ? 'confirmed' : 'pending'}
 			</h2>
 			<button
 				className="mt-3 px-4 py-2 rounded-lg text-white font-medium transition-all 
-                   bg-blue-500 hover:bg-blue-600 active:bg-blue-700 focus:outline-none"
+                   bg-blue-500 hover:bg-blue-600 active:bg-blue-700 focus:outline-none mb-2"
 				onClick={() => registerBtnHandler()}
 			>
 				{!data.registered ? 'Enter Game' : 'Leave Game'}

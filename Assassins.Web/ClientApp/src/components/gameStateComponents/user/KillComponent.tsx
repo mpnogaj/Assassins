@@ -20,8 +20,8 @@ const KillComponent = (props: { targetName: string; initialTextBoxContent: strin
 	};
 
 	return (
-		<div className="flex flex-col items-center bg-gray-700 rounded-lg shadow-md gap-4 p-5">
-			<h4 className="text-lg text-white">Twój cel: {props.targetName}</h4>
+		<div className="flex flex-col items-center">
+			<h4 className="text-lg text-white mb-2">Twój cel: {props.targetName}</h4>
 			<form
 				className="flex flex-row items-center gap-2"
 				onSubmit={e => {

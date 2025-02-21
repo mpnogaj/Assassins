@@ -9,6 +9,7 @@ import React from 'react';
 type State = {
 	username: string;
 	password: string;
+	confirmedPassword: string;
 	firstName: string;
 	lastName: string;
 };
@@ -22,6 +23,7 @@ class RegisterPage extends NavComponent<empty, State> {
 		this.state = {
 			username: '',
 			password: '',
+			confirmedPassword: '',
 			firstName: '',
 			lastName: ''
 		};
@@ -56,6 +58,10 @@ class RegisterPage extends NavComponent<empty, State> {
 		if (!window.grecaptcha) {
 			console.error('reCAPTCHA not loaded yet.');
 			return;
+		} else if (this.state.password !== this.state.confirmedPassword) {
+			alert('Passwords do not match.');
+			console.error('Passwords do not match.');
+			return;
 		}
 
 		try {
@@ -80,9 +86,9 @@ class RegisterPage extends NavComponent<empty, State> {
 
 	render(): React.ReactNode {
 		return (
-			<div className="flex min-h-screen items-center justify-center bg-gray-100">
-				<div className="w-full max-w-md space-y-6 rounded-lg bg-white p-8 shadow-lg">
-					<h1 className="text-center text-2xl font-semibold text-gray-900">Register</h1>
+			<div className="flex min-w-screen items-center justify-center">
+				<div className="w-full max-w-2xl space-y-6 rounded-lg bg-gray-800 p-8 shadow-lg">
+					<h1 className="text-center text-2xl font-semibold text-gray-400">Register</h1>
 					<form
 						className="space-y-4"
 						onSubmit={event => {
@@ -91,10 +97,10 @@ class RegisterPage extends NavComponent<empty, State> {
 						}}
 					>
 						<div>
-							<label className="block text-sm font-medium text-gray-700">First name: </label>
+							<label className="block text-sm font-medium text-gray-500">First name: </label>
 							<input
 								required
-								className="mt-1 w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
+								className="mt-1 w-full rounded-md bg-gray-600 p-2"
 								type="text"
 								value={this.state.firstName}
 								onChange={event => {
@@ -103,10 +109,10 @@ class RegisterPage extends NavComponent<empty, State> {
 							/>
 						</div>
 						<div>
-							<label className="block text-sm font-medium text-gray-700">Last name: </label>
+							<label className="block text-sm font-medium text-gray-500">Last name: </label>
 							<input
 								required
-								className="mt-1 w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
+								className="mt-1 w-full rounded-md bg-gray-600 p-2"
 								type="text"
 								value={this.state.lastName}
 								onChange={event => {
@@ -115,10 +121,10 @@ class RegisterPage extends NavComponent<empty, State> {
 							/>
 						</div>
 						<div>
-							<label className="block text-sm font-medium text-gray-700">Username: </label>
+							<label className="block text-sm font-medium text-gray-500">Username: </label>
 							<input
 								required
-								className="mt-1 w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
+								className="mt-1 w-full rounded-md bg-gray-600 p-2"
 								type="text"
 								value={this.state.username}
 								onChange={event => {
@@ -127,14 +133,26 @@ class RegisterPage extends NavComponent<empty, State> {
 							/>
 						</div>
 						<div>
-							<label className="block text-sm font-medium text-gray-700">Password: </label>
+							<label className="block text-sm font-medium text-gray-500">Password: </label>
 							<input
 								required
-								className="mt-1 w-full rounded-md border border-gray-300 p-2 focus:border-blue-500 focus:ring-blue-500"
+								className="mt-1 w-full rounded-md bg-gray-600 p-2"
 								type="password"
 								value={this.state.password}
 								onChange={event => {
 									this.setState({ password: event.target.value });
+								}}
+							/>
+						</div>
+						<div className="mb-7">
+							<label className="block text-sm font-medium text-gray-500">Confirm password: </label>
+							<input
+								required
+								className="mt-1 w-full rounded-md bg-gray-600 p-2"
+								type="password"
+								value={this.state.confirmedPassword}
+								onChange={event => {
+									this.setState({ confirmedPassword: event.target.value });
 								}}
 							/>
 						</div>
@@ -145,7 +163,7 @@ class RegisterPage extends NavComponent<empty, State> {
 							Register
 						</button>
 					</form>
-					<div className="text-center text-sm text-gray-600">
+					<div className="text-center text-sm text-gray-500">
 						<span>
 							Already have an account?{' '}
 							<a href="/login" className="text-blue-600 hover:underline">

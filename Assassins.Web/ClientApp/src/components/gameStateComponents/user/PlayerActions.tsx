@@ -25,10 +25,12 @@ const PlayerActionsComponent = () => {
 	return (
 		<div className="flex flex-col items-center w-full gap-4 mb-4">
 			<PlayerInfoComponent alive={data.alive} killCode={data.killCode} />
-			<KillComponent
-				targetName={data.targetName}
-				initialTextBoxContent={(maybeSearchParams as string) ?? ''}
-			/>
+			{data.alive && (
+				<KillComponent
+					targetName={data.targetName}
+					initialTextBoxContent={(maybeSearchParams as string) ?? ''}
+				/>
+			)}
 		</div>
 	);
 };

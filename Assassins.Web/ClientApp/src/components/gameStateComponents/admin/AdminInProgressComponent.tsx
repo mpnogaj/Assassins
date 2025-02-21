@@ -53,30 +53,33 @@ const AdminInProgressComponent = () => {
 				case of victim insubordination
 			</span>
 			<div>
-				<table>
+				<table className="w-full border-collapse border border-gray-600 shadow-md rounded-lg overflow-hidden">
 					<thead>
-						<tr>
-							<th>Player ID</th>
-							<th>Player Name</th>
-							<th>Status</th>
-							<th>Target ID</th>
-							<th>Target Name</th>
-							<th>Actions</th>
+						<tr className="bg-gray-600 text-gray-400 uppercase text-sm font-semibold">
+							<th className="px-4 py-2 ">Player ID</th>
+							<th className="px-4 py-2 ">Player Name</th>
+							<th className="px-4 py-2 ">Status</th>
+							<th className="px-4 py-2 ">Target ID</th>
+							<th className="px-4 py-2 ">Target Name</th>
+							<th className="px-4 py-2 ">Actions</th>
 						</tr>
 					</thead>
 					<tbody>
 						{data.playerData.map(playerData => {
 							// Move into separate component, with btn on click exposed?
 							return (
-								<tr>
-									<th>{playerData.playerId}</th>
-									<th>{playerData.playerFullName}</th>
-									<th>{playerData.alive ? 'Alive' : 'KIA'}</th>
-									<th>{playerData.victimId ?? '-'}</th>
-									<th>{playerData.victimFullName ?? '-'}</th>
-									<th>
+								<tr className="odd:bg-gray-400 even:bg-gray-400 hover:bg-gray-400 transition">
+									<th className="px-4 py-2 ">{playerData.playerId}</th>
+									<th className="px-4 py-2 ">{playerData.playerFullName}</th>
+									<th className="px-4 py-2 ">{playerData.alive ? 'Alive' : 'KIA'}</th>
+									<th className="px-4 py-2 ">{playerData.victimId ?? '-'}</th>
+									<th className="px-4 py-2 ">{playerData.victimFullName ?? '-'}</th>
+									<th className="px-4 py-2 text-center">
 										{playerData.alive ? (
-											<a className="btn" onClick={() => adminKillPlayer(playerData.playerId)}>
+											<a
+												className="w-full text-center rounded-md bg-red-600 p-2 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 mb-2"
+												onClick={() => adminKillPlayer(playerData.playerId)}
+											>
 												Force kill
 											</a>
 										) : (
