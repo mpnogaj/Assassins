@@ -1,4 +1,6 @@
 ﻿using Assassins.Web.Models;
+using Assassins.Web.Services.GameService.GameServiceErrors;
+using Assassins.Web.Utils;
 
 namespace Assassins.Web.Services.GameService;
 
@@ -10,18 +12,16 @@ public interface IGameService
 	public Task CloseRegistration();
 	public Task StartGame();
 
-	/// <summary>
-	/// Returns player with given user account
-	/// Returns null when user doesn't take part in game
-	/// </summary>
-	/// <param name="user"></param>
-	/// <returns></returns>
-	public Task<Player?> GetPlayer(User user);
+	public Task<Result<List<User>, GetRegisteredUsersErrors>> GetRegisteredUsers();
+	public Task<Result<KickUserErrors>> KickUser(Guid userId);
 
-	public Task<Player?> GetTarget(Player player);
-	public Task<bool> ToggleRegisterUser(User user);
-	public Task<bool> AttemptKill(Player killer, string code);
-	public Task<bool> AdminKill(Guid killerGuid);
+	public Task<Result<Player, GetPlayerErrors>> GetPlayer(User user);
+	public Task<Result<Player, GetTargetErrors>> GetTarget(Player player);
+	public Result<User, GetWinnerErrors> GetWinner();
+
+	public Task<Result<ToggleRegisterUserErrors>> ToggleRegisterUser(User user);
+	public Task<Result<KillErrors>> AttemptKill(Player killer, string code);
+	public Task<Result<KillErrors>> AdminKill(Guid killerGuid);
 
 	public Task<List<(Player player, Player? target)>> GetPlayersWithTargets();
 }

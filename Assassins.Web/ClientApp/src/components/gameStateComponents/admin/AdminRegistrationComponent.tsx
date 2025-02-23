@@ -10,9 +10,12 @@ const closeRegistrationClick = async () => {
 
 const AdminRegistrationComponent = () => {
 	return (
-		<div>
-			<span>Registration in progress</span>
-			<a className="btn btn-primary mt-3" onClick={() => closeRegistrationClick()}>
+		<div className="flex flex-col justify-center items-center gap-1 mt-4">
+			<span className="text-green-500 text-lg font-semibold mb-2">Registration in progress</span>
+			<a
+				className="w-full text-center rounded-md bg-red-600 p-2 text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
+				onClick={() => closeRegistrationClick()}
+			>
 				Close registration
 			</a>
 		</div>

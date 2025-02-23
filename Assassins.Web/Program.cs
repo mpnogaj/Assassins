@@ -6,15 +6,17 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.EntityFrameworkCore;
 using BC = BCrypt.Net.BCrypt;
 using Assassins.Web.Services.GameService;
-using Assassins.Web.Services.Repositories.PlayerRepository;
 using Assassins.Web.Services.UserService;
 using Assassins.Web.Services.JwtService;
 using Assassins.Web.Db;
-using Assassins.Web.Services.Repositories.UserRepository;
 using Assassins.Web.Middlewares;
 using Assassins.Web.Hub;
 using Assassins.Web.Models;
+using Assassins.Web.Repositories.AnnouncementRepository;
 using Assassins.Web.Services.RecaptchaService;
+using Assassins.Web.Repositories.PlayerRepository;
+using Assassins.Web.Repositories.UserRepository;
+using Assassins.Web.Services.AnnouncementService;
 
 namespace Assassins.Web
 {
@@ -33,6 +35,7 @@ namespace Assassins.Web
 			services.AddDbContext<AppDbContext>(options =>
 			{
 				options.UseSqlite(configuration.GetConnectionString("Default"));
+				options.EnableSensitiveDataLogging();
 			});
 
 			services.AddAuthentication().AddJwtBearer(options =>
@@ -65,7 +68,9 @@ namespace Assassins.Web
 
 				options.AddPolicy("fixed", httpContext =>
 					RateLimitPartition.GetFixedWindowLimiter(
-						partitionKey: httpContext.GetLoggedUser()?.Id.ToString(),
+						partitionKey: httpContext.GetLoggedUser().Match(
+							onSuccess: (user) => user.Id.ToString(),
+							onFailure: (_) => string.Empty),
 						factory: _ => new FixedWindowRateLimiterOptions()
 						{
 							PermitLimit = 1,
@@ -75,12 +80,15 @@ namespace Assassins.Web
 
 			services.AddTransient<IUserRepository, UserRepository>();
 			services.AddTransient<IPlayerRepository, PlayerRepository>();
+			services.AddTransient<IAnnouncementRepository, AnnouncementRepository>();
 
 			services.AddTransient<IJwtService, JwtService>();
 			services.AddTransient<IRecaptchaService, RecaptchaService>();
 			services.AddTransient<IUserService, UserService>();
 
-			services.AddSingleton<IGameService, GameService>();
+			services.AddTransient<IGameService, GameService>();
+
+			services.AddTransient<IAnnouncementService, AnnouncementService>();
 
 			services.AddControllers();
 
@@ -125,6 +133,12 @@ namespace Assassins.Web
 			var app = builder.Build();
 
 			EnsureDb(app);
+
+			using (var scope = app.Services.CreateScope())
+			{
+				Console.WriteLine("Opening registration");
+				scope.ServiceProvider.GetRequiredService<IGameService>().OpenRegistration();
+			}
 
 			app.UseRouting();
 

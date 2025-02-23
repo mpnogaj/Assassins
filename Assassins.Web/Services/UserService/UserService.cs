@@ -1,6 +1,7 @@
 ﻿using Assassins.Web.Dto;
 using Assassins.Web.Models;
-using Assassins.Web.Services.Repositories.UserRepository;
+using Assassins.Web.Repositories.UserRepository;
+using Assassins.Web.Utils;
 using BC = BCrypt.Net.BCrypt;
 
 namespace Assassins.Web.Services.UserService;
@@ -14,33 +15,54 @@ public class UserService : IUserService
 		_userRepository = userRepository;
 	}
 
-	public Task<User?> GetUser(string username)
+	public async Task<Result<User, UserServiceErrors>> GetUser(string username)
 	{
-		return _userRepository.GetUser(username);
+		var user = await _userRepository.GetUser(username);
+		if (user == null)
+		{
+			return Result<User, UserServiceErrors>.Failure(UserServiceErrors.UsernameNotFoundError);
+		}
+
+		return Result<User, UserServiceErrors>.Success(user);
 	}
 
-	public async Task<User?> Login(LoginDto loginDetails)
+	public async Task<Result<User, UserServiceErrors>> Login(LoginDto loginDetails)
 	{
-		//TODO: add dto validation here
 		var user = await _userRepository.GetUser(loginDetails.Username);
 		if (user == null)
 		{
-			return null;
+			return Result<User, UserServiceErrors>.Failure(UserServiceErrors.UsernameNotFoundError);
 		}
 
 		if (!BC.Verify(loginDetails.Password, user.PasswordHash))
 		{
-			return null;
+			return Result<User, UserServiceErrors>.Failure(UserServiceErrors.InvalidPasswordError);
 		}
 
-		return user;
+		return Result<User, UserServiceErrors>.Success(user);
 	}
 
-	public async Task<User?> Register(UserRegisterDto userRegisterDetails)
+	public async Task<Result<User, UserServiceErrors>> Register(UserRegisterDto userRegisterDetails)
 	{
-		//TODO: add dto validation here
+		if (userRegisterDetails.Password.Length < 8)
+		{
+			return Result<User, UserServiceErrors>.Failure(UserServiceErrors.PasswordTooShortError);
+		}
+
+		var userAlreadyExists = await IsUsernameAlreadyInUse(userRegisterDetails.Username);
+
+		if (userAlreadyExists)
+		{
+			return Result<User, UserServiceErrors>.Failure(UserServiceErrors.UsernameTakenError);
+		}
+
 		var user = new User(userRegisterDetails, BC.HashPassword(userRegisterDetails.Password));
 		await _userRepository.CreateUser(user);
-		return user;
+		return Result<User, UserServiceErrors>.Success(user);
+	}
+
+	private async Task<bool> IsUsernameAlreadyInUse(string username)
+	{
+		return (await _userRepository.GetUsers()).Any(u => u.Username == username);
 	}
 }

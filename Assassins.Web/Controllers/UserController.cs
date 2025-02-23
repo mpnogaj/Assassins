@@ -27,13 +27,18 @@ namespace Assassins.Web.Controllers
 		[HttpPost("login")]
 		public async Task<IActionResult> Login([FromBody] LoginDto loginDto)
 		{
-			var user = await _userService.Login(loginDto);
-			if (user == null)
-			{
-				return Unauthorized();
-			}
+			var loginResult = await _userService.Login(loginDto);
 
-			return Ok(CreateJwt(user));
+			return loginResult.Match(
+				onSuccess: (user) => Ok(CreateJwt(user)),
+				onFailure: (error) =>
+					error switch
+					{
+						UserServiceErrors.UsernameNotFoundError or UserServiceErrors.InvalidPasswordError
+							=> Unauthorized("Incorrect username or password"),
+						_ => Problem("An unknown error occurred", statusCode: StatusCodes.Status500InternalServerError)
+					}
+			);
 		}
 
 		[HttpPost("register")]
@@ -41,19 +46,34 @@ namespace Assassins.Web.Controllers
 		{
 			var recaptchaResult = await _recaptchaService.ValidateRecaptcha(userRegisterDto.RecaptchaToken);
 
-			if (!recaptchaResult)
-			{
-				return Forbid();
-			}
+			return await recaptchaResult.MatchAsync(
+				onSuccess: async () =>
+				{
+					var userResult = await _userService.Register(userRegisterDto);
 
-			var user = await _userService.Register(userRegisterDto);
-
-			if (user == null)
-			{
-				return Forbid();
-			}
-
-			return Ok(CreateJwt(user));
+					return userResult.Match(
+						(user) => Ok(CreateJwt(user)),
+						(error) => error switch
+						{
+							UserServiceErrors.PasswordTooShortError => BadRequest(
+								"Password to short. Please use longer one"),
+							UserServiceErrors.UsernameTakenError => Conflict(
+								"Username is already taken"),
+							_ => Problem("An unknown error occurred",
+								statusCode: StatusCodes.Status500InternalServerError)
+						}
+					);
+				},
+				onFailure: error => error switch
+				{
+					RecaptchaServiceErrors.VerificationFailed
+						or RecaptchaServiceErrors.VerificationApiReturnedNonSuccessStatusCode
+						=> StatusCode(StatusCodes.Status403Forbidden, "reCAPTCHA verification failed"),
+					RecaptchaServiceErrors.RecaptchaSecretMissingError
+						=> StatusCode(StatusCodes.Status500InternalServerError,
+							"reCAPTCHA secret missing! Contact site admin"),
+					_ => Problem("An unknown error occurred", statusCode: StatusCodes.Status500InternalServerError)
+				});
 		}
 
 		[HttpGet("isLoggedIn")]
@@ -75,18 +95,13 @@ namespace Assassins.Web.Controllers
 		[Authorize]
 		public IActionResult UserInfo()
 		{
-			var user = HttpContext.GetLoggedUser();
-			if (user == null)
-			{
-				return Unauthorized();
-			}
-
-			var userDto = new UserDto
-			{
-				Id = user.Id,
-				FullName = user.FullName
-			};
-			return Ok(userDto);
+			return HttpContext.GetLoggedUser().Match<IActionResult>(
+				onSuccess: (user) => Ok(new UserDto
+				{
+					Id = user.Id,
+					FullName = user.FullName
+				}),
+				onFailure: (_) => Unauthorized());
 		}
 
 		private string CreateJwt(User user)

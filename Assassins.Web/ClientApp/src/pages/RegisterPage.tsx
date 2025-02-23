@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 type State = {
 	username: string;
 	password: string;
-	passwordConfirmation: string;
+	confirmedPassword: string;
 	firstName: string;
 	lastName: string;
 };
@@ -24,7 +24,7 @@ class RegisterPage extends NavComponent<empty, State> {
 		this.state = {
 			username: '',
 			password: '',
-			passwordConfirmation: '',
+			confirmedPassword: '',
 			firstName: '',
 			lastName: ''
 		};
@@ -59,6 +59,10 @@ class RegisterPage extends NavComponent<empty, State> {
 		if (!window.grecaptcha) {
 			toast.error('reCAPTCHA not loaded yet. Please try again after few seconds');
 			return;
+		} else if (this.state.password !== this.state.confirmedPassword) {
+			alert('Passwords do not match.');
+			console.error('Passwords do not match.');
+			return;
 		}
 
 		try {
@@ -83,84 +87,92 @@ class RegisterPage extends NavComponent<empty, State> {
 
 	render(): React.ReactNode {
 		return (
-			<div className="container">
-				<h1>Register</h1>
-				<form
-					className="form"
-					onSubmit={event => {
-						event.preventDefault();
-						this.registerHandler();
-					}}
-				>
-					<div className="form-group">
-						<label>First name: </label>
-						<input
-							required
-							className="form-control"
-							type="text"
-							value={this.state.firstName}
-							onChange={event => {
-								this.setState({ firstName: event.target.value });
-							}}
-						/>
-					</div>
-					<div className="form-group">
-						<label>Last name: </label>
-						<input
-							required
-							className="form-control"
-							type="text"
-							value={this.state.lastName}
-							onChange={event => {
-								this.setState({ lastName: event.target.value });
-							}}
-						/>
-					</div>
-					<div className="form-group">
-						<label>Username: </label>
-						<input
-							required
-							className="form-control"
-							type="text"
-							value={this.state.username}
-							onChange={event => {
-								this.setState({ username: event.target.value });
-							}}
-						/>
-					</div>
-					<div className="form-group">
-						<label>Password: </label>
-						<input
-							required
-							className="form-control"
-							type="password"
-							value={this.state.password}
-							onChange={event => {
-								this.setState({ password: event.target.value });
-							}}
-						/>
-					</div>
-					<div className="form-group">
-						<label>Confirm password: </label>
-						<input
-							required
-							className="form-control"
-							type="password"
-							value={this.state.passwordConfirmation}
-							onChange={event => {
-								this.setState({ passwordConfirmation: event.target.value });
-							}}
-						/>
-					</div>
-					<button type="submit" className="btn btn-primary mt-3">
-						Register
-					</button>
-					<div>
+			<div className="flex min-w-screen items-center justify-center">
+				<div className="w-full max-w-2xl space-y-6 rounded-lg bg-gray-800 p-8 shadow-lg">
+					<h1 className="text-center text-2xl font-semibold text-gray-400">Register</h1>
+					<form
+						className="space-y-4"
+						onSubmit={event => {
+							event.preventDefault();
+							this.registerHandler();
+						}}
+					>
+						<div>
+							<label className="block text-sm font-medium text-gray-500">First name: </label>
+							<input
+								required
+								className="mt-1 w-full rounded-md bg-gray-600 p-2"
+								type="text"
+								value={this.state.firstName}
+								onChange={event => {
+									this.setState({ firstName: event.target.value });
+								}}
+							/>
+						</div>
+						<div>
+							<label className="block text-sm font-medium text-gray-500">Last name: </label>
+							<input
+								required
+								className="mt-1 w-full rounded-md bg-gray-600 p-2"
+								type="text"
+								value={this.state.lastName}
+								onChange={event => {
+									this.setState({ lastName: event.target.value });
+								}}
+							/>
+						</div>
+						<div>
+							<label className="block text-sm font-medium text-gray-500">Username: </label>
+							<input
+								required
+								className="mt-1 w-full rounded-md bg-gray-600 p-2"
+								type="text"
+								value={this.state.username}
+								onChange={event => {
+									this.setState({ username: event.target.value });
+								}}
+							/>
+						</div>
+						<div>
+							<label className="block text-sm font-medium text-gray-500">Password: </label>
+							<input
+								required
+								className="mt-1 w-full rounded-md bg-gray-600 p-2"
+								type="password"
+								value={this.state.password}
+								onChange={event => {
+									this.setState({ password: event.target.value });
+								}}
+							/>
+						</div>
+						<div className="mb-7">
+							<label className="block text-sm font-medium text-gray-500">Confirm password: </label>
+							<input
+								required
+								className="mt-1 w-full rounded-md bg-gray-600 p-2"
+								type="password"
+								value={this.state.confirmedPassword}
+								onChange={event => {
+									this.setState({ confirmedPassword: event.target.value });
+								}}
+							/>
+						</div>
+						<button
+							type="submit"
+							className="w-full rounded-md bg-blue-600 p-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+						>
+							Register
+						</button>
+					</form>
+					<div className="text-center text-sm text-gray-500">
 						<span>
-							Already have an account? <a href="/login">Sign in</a>
+							Already have an account?{' '}
+							<a href="/login" className="text-blue-600 hover:underline">
+								Sign in
+							</a>
 						</span>
 					</div>
-				</form>
+				</div>
 			</div>
 		);
 	}

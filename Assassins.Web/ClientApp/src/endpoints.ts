@@ -13,7 +13,9 @@ const Endpoints = {
 		startGame: '/admin/startGame',
 		restartGame: '/admin/restartGame',
 		extendedProgress: '/admin/extendedProgress',
-		adminKill: '/admin/kill'
+		adminKill: '/admin/kill',
+		participants: '/admin/registeredUsers',
+		kickUser: '/admin/kickUser'
 	},
 	game: {
 		gameState: '/game/state',
@@ -22,6 +24,11 @@ const Endpoints = {
 		winner: '/game/winner',
 		playerInfo: '/game/self',
 		kill: '/game/kill'
+	},
+	announcement: {
+		getAnnouncements: '/announcement',
+		delete: '/announcement/delete',
+		add: '/announcement/add'
 	}
 };
 

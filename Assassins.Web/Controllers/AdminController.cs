@@ -1,5 +1,6 @@
 ﻿using Assassins.Web.Dto;
 using Assassins.Web.Services.GameService;
+using Assassins.Web.Services.GameService.GameServiceErrors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -54,6 +55,41 @@ public class AdminController : ControllerBase
 		return Ok();
 	}
 
+	[HttpGet("registeredUsers")]
+	public async Task<IActionResult> GetRegisteredUsers()
+	{
+		var registeredUsersResult = await _gameService.GetRegisteredUsers();
+
+		return registeredUsersResult.Match<IActionResult>(
+			onSuccess: (users) => Ok(new ParticipantsDto
+			{
+				Participants = users.Select(user => new ParticipantsDto.UserInfoDto()
+				{
+					Id = user.Id,
+					FullName = user.FullName
+				}).ToList()
+			}),
+			onFailure: (error) => error switch
+			{
+				GetRegisteredUsersErrors.InvalidGameState => Conflict("Invalid game state"),
+				_ => throw new ArgumentOutOfRangeException(nameof(error), error, null)
+			});
+	}
+
+	[HttpPost("kickUser")]
+	public async Task<IActionResult> KickUser([FromBody] KickUserDto kickUserDto)
+	{
+		var kickUserResult = await _gameService.KickUser(kickUserDto.UserId);
+		return kickUserResult.Match<IActionResult>(
+			onSuccess: () => Ok(),
+			onFailure: (error) => error switch
+			{
+				KickUserErrors.UserWithGivenIdNotFound => NotFound("User not found"),
+				_ => throw new ArgumentOutOfRangeException(nameof(error), error, null)
+			}
+		);
+	}
+
 	[HttpGet("extendedProgress")]
 	public async Task<IActionResult> GetExtendedGameProgress()
 	{
@@ -71,7 +107,7 @@ public class AdminController : ControllerBase
 							 Alive = playerWithTarget.target != null,
 							 PlayerId = playerWithTarget.player.Id,
 							 PlayerFullName = playerWithTarget.player.User.FullName,
-							 VictimId = playerWithTarget.target?.TargetGuid,
+							 VictimId = playerWithTarget.target?.Id,
 							 VictimFullName = playerWithTarget.target?.User.FullName
 						 }).ToList();
 
@@ -87,17 +123,19 @@ public class AdminController : ControllerBase
 	[HttpPost("kill")]
 	public async Task<IActionResult> AdminKill([FromBody] AdminKillDto adminKillDto)
 	{
-		if (_gameService.GameState is not InProgressState _)
-		{
-			return Conflict();
-		}
+		var killResult = await _gameService.AdminKill(adminKillDto.PlayerGuid);
 
-		var successful = await _gameService.AdminKill(adminKillDto.PlayerGuid);
-
-		if (!successful)
-		{
-			return NotFound();
-		}
-		return Ok();
+		return killResult.Match<IActionResult>(
+			onSuccess: () => Ok(),
+			onFailure: (error) => error switch
+			{
+				KillErrors.KillerNotFound => NotFound("Killer not found"),
+				KillErrors.TargetNotFound => NotFound("Target not found"),
+				KillErrors.GameIsNotInProgressError => Conflict("Invalid game state"),
+				KillErrors.InvalidKillCode =>
+					StatusCode(StatusCodes.Status500InternalServerError,
+						"Invalid kill code when admin kill. Contact admin, this should happen"),
+				_ => Problem("An unknown error occurred", statusCode: StatusCodes.Status500InternalServerError)
+			});
 	}
 }

@@ -1,14 +1,13 @@
-﻿using Assassins.Web;
-using Assassins.Web.Dto;
-using Microsoft.AspNetCore.Mvc.Testing;
+﻿using Assassins.IntegrationTests.Consts;
+using Assassins.IntegrationTests.Utils.User;
 
 namespace Assassins.IntegrationTests;
 
-public class UserRegistrationTests : IClassFixture<WebApplicationFactory<Program>>
+public class UserRegistrationTests : IClassFixture<CustomWebApplicationFactory>
 {
-	private readonly WebApplicationFactory<Program> _factory;
+	private readonly CustomWebApplicationFactory _factory;
 
-	public UserRegistrationTests(WebApplicationFactory<Program> factory)
+	public UserRegistrationTests(CustomWebApplicationFactory factory)
 	{
 		_factory = factory;
 	}
@@ -21,28 +20,45 @@ public class UserRegistrationTests : IClassFixture<WebApplicationFactory<Program
 
 		var response = await httpClient.GetAsync(isLoggedInUrl);
 
-		Assert.Throws<HttpRequestException>(response.EnsureSuccessStatusCode);
+		Assert.False(response.IsSuccessStatusCode);
 	}
 
 	[Fact]
-	public async Task UserIsAbleToLogIn()
+	public async Task UserIsAbleToRegisterAndIsLoggedIn()
 	{
 		var httpClient = _factory.CreateClient();
-		var loginUrl = "/api/user/login";
-		var loginPayload = new LoginDto
-		{
-			Username = "user1",
-			Password = "pswd"
-		};
 
-		var loginResponse = await httpClient.PostAsJsonAsync(loginUrl, loginPayload);
+		var registerResponse = await httpClient.PostAsJsonAsync(Routes.User.Register, UserInfos.User1.ToUserRegisterDto());
+		var isLoggedInResponse = await httpClient.GetAsync(Routes.User.IsLoggedIn);
 
-		loginResponse.EnsureSuccessStatusCode();
+		Assert.True(registerResponse.IsSuccessStatusCode);
+		Assert.True(isLoggedInResponse.IsSuccessStatusCode);
+	}
 
-		var isLoggedInUrl = "/api/user/isLoggedIn";
+	[Fact]
+	public async Task UserIsAbleToLogout()
+	{
+		var httpClient = _factory.CreateClient();
 
-		var response = await httpClient.GetAsync(isLoggedInUrl);
+		await httpClient.PostAsJsonAsync(Routes.User.Register, UserInfos.User2.ToUserRegisterDto());
+		await httpClient.PostAsync(Routes.User.Logout, null);
 
-		response.EnsureSuccessStatusCode();
+		var isLoggedInResponse = await httpClient.GetAsync(Routes.User.IsLoggedIn);
+		Assert.False(isLoggedInResponse.IsSuccessStatusCode);
+	}
+
+	[Fact]
+	public async Task UserIsAbleToLoginWithCreatedAccount()
+	{
+		var httpClient = _factory.CreateClient();
+
+		await httpClient.PostAsJsonAsync(Routes.User.Register, UserInfos.User3.ToUserRegisterDto());
+		await httpClient.PostAsync(Routes.User.Logout, null);
+
+		var loginResponse = await httpClient.PostAsJsonAsync(Routes.User.Login, UserInfos.User3.ToLoginDto());
+		var isLoggedInResponse = await httpClient.GetAsync(Routes.User.IsLoggedIn);
+
+		Assert.True(loginResponse.IsSuccessStatusCode);
+		Assert.True(isLoggedInResponse.IsSuccessStatusCode);
 	}
 }

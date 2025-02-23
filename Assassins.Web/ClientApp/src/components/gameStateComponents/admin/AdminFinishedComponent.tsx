@@ -12,15 +12,19 @@ const createNewGame = async () => {
 const AdminFinishedComponent = () => {
 	return (
 		<div>
-			<div>
-				<span>Game has finished</span>
-				<GameWinnerComponent />
+			<div className="flex flex-col justify-center items-center gap-2 mt-4">
+				<span className="text-red-500 text-center text-lg">Game has finished</span>
+				<div className="text-center">
+					<GameWinnerComponent />
+				</div>
 			</div>
-			<div>
-				<a className="btn btn-primary mt-3" onClick={() => createNewGame()}>
+			<div className="flex flex-col justify-center items-center gap-2 mt-4">
+				<a
+					className="w-full text-center rounded-md bg-blue-600 p-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+					onClick={() => createNewGame()}
+				>
 					Create new game
 				</a>
-				<span>*Goes back to registartion phase</span>
 			</div>
 		</div>
 	);

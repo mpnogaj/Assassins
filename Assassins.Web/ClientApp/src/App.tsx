@@ -6,37 +6,42 @@ import LoaderComponent from './components/LoaderComponent';
 import AdminPage from './pages/AdminPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import { WebSocketProvider } from './components/WebSocketProvider';
 
 const App = () => {
 	return (
-		<BrowserRouter>
-			<Routes>
-				<Route
-					path="/"
-					element={
-						<ProtectedRoute
-							checkAuthFunc={isLoggedIn}
-							loading={<h1>Loading...</h1>}
-							child={<Home />}
-							fallback={<Navigate to="/login" />}
+		<div className="flex min-h-screen min-w-screen items-center justify-center bg-gray-900">
+			<WebSocketProvider>
+				<BrowserRouter>
+					<Routes>
+						<Route
+							path="/"
+							element={
+								<ProtectedRoute
+									checkAuthFunc={isLoggedIn}
+									loading={<h1>Loading...</h1>}
+									child={<Home />}
+									fallback={<Navigate to="/login" />}
+								/>
+							}
 						/>
-					}
-				/>
-				<Route
-					path="/admin"
-					element={
-						<ProtectedRoute
-							checkAuthFunc={isAdmin}
-							loading={<LoaderComponent />}
-							child={<AdminPage />}
-							fallback={<Navigate to="/" />}
+						<Route
+							path="/admin"
+							element={
+								<ProtectedRoute
+									checkAuthFunc={isAdmin}
+									loading={<LoaderComponent />}
+									child={<AdminPage />}
+									fallback={<Navigate to="/" />}
+								/>
+							}
 						/>
-					}
-				/>
-				<Route path="/login" element={<LoginPage />} />
-				<Route path="/register" element={<RegisterPage />} />
-			</Routes>
-		</BrowserRouter>
+						<Route path="/login" element={<LoginPage />} />
+						<Route path="/register" element={<RegisterPage />} />
+					</Routes>
+				</BrowserRouter>
+			</WebSocketProvider>
+		</div>
 	);
 };
 
