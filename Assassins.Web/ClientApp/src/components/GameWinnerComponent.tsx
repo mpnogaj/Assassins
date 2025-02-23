@@ -10,7 +10,11 @@ const GameWinnerComponent = () => {
 	if (isLoading) return <LoaderComponent />;
 	if (isError || !data) return <p>Couldn't load winner</p>;
 
-	return <span>And the winner is: {data?.winnerName}!!11!!1oneone!</span>;
+	return (
+		<span className="text-green-500 font-bold text-2xl">
+			And the winner is: {data.winnerName}!!11!!1oneone!
+		</span>
+	);
 };
 
 export default GameWinnerComponent;

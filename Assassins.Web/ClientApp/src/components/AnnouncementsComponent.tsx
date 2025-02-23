@@ -50,22 +50,36 @@ const Announcements = ({ showDeleteButton }: Props) => {
 	} else {
 		console.log(data);
 		return (
-			<div>
-				<h3>Announcements</h3>
+			<div className="space-y-4">
+				<h3 className="text-xl font-semibold text-gray-400">Announcements</h3>
 				{insertBetween(
 					data.announcements.map(announcement => {
 						return (
-							<div>
-								<h5>{announcement.title}</h5>
-								<span>{dateToString(new Date(announcement.date))}</span>
-								<p style={{ whiteSpace: 'pre-line' }}>{announcement.content}</p>
+							<div className="bg-gray-500 rounded-lg shadow-md p-4">
+								<div className="flex justify-between mb-2">
+									<h5 className="text-gray-900 font-bold text-lg break-words text-pretty">
+										{announcement.title}
+									</h5>
+									<span className="text-gray-900 font-light text-sm">
+										{dateToString(new Date(announcement.date))}
+									</span>
+								</div>
+								<p className="break-words text-pretty whitespace-pre-line mb-2">
+									{announcement.content}
+								</p>
 								{showDeleteButton ? (
-									<a onClick={() => deleteAnnouncement(announcement.id)}>Delete</a>
+									<a
+										className="px-4 py-2 rounded-lg text-white font-medium transition-all 
+                   bg-red-500 hover:bg-red-600 active:bg-red-700 focus:outline-none"
+										onClick={() => deleteAnnouncement(announcement.id)}
+									>
+										Delete
+									</a>
 								) : null}
 							</div>
 						);
 					}),
-					<hr />
+					null
 				)}
 			</div>
 		);

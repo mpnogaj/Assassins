@@ -6,7 +6,7 @@ import { fetchRegistrationStatus } from '@/dataFetchers/gameFetchers';
 import LoaderComponent from './LoaderComponent';
 import FetchErrorComponent from './FetchErrorComponent';
 
-const RegistrationComponent = () => {
+const EnterGameComponent = () => {
 	const { data, isLoading, isError, refetch } =
 		useDataFetch<RegistrationStatusDto>(fetchRegistrationStatus);
 
@@ -19,13 +19,19 @@ const RegistrationComponent = () => {
 	if (isError || !data) return <FetchErrorComponent />;
 
 	return (
-		<div>
-			<h2>You {data.registered ? 'are' : 'are not'} registered</h2>
-			<a className="btn btn-primary mt-3" onClick={() => registerBtnHandler()}>
-				{!data.registered ? 'Register' : 'Unregister'}
-			</a>
+		<div className="text-center p-4 m-0">
+			<h2 className="text-xl font-semibold text-gray-400">
+				Participation: {data.registered ? 'confirmed' : 'pending'}
+			</h2>
+			<button
+				className="mt-3 px-4 py-2 rounded-lg text-white font-medium transition-all 
+                   bg-blue-500 hover:bg-blue-600 active:bg-blue-700 focus:outline-none mb-2"
+				onClick={() => registerBtnHandler()}
+			>
+				{!data.registered ? 'Enter Game' : 'Leave Game'}
+			</button>
 		</div>
 	);
 };
 
-export default RegistrationComponent;
+export default EnterGameComponent;

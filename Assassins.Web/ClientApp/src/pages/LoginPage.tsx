@@ -35,48 +35,57 @@ class LoginPage extends NavComponent<empty, State> {
 
 	render(): React.ReactNode {
 		return (
-			<div className="container">
-				<h1>Sign in ...</h1>
-				<form
-					className="form"
-					onSubmit={event => {
-						event.preventDefault();
-						this.loginHandler();
-					}}
-				>
-					<div className="form-group">
-						<label>Login: </label>
-						<input
-							required
-							className="form-control"
-							type="text"
-							value={this.state.username}
-							onInput={e => {
-								this.setState({ username: e.currentTarget.value });
-							}}
-						/>
-					</div>
-					<div className="form-group">
-						<label>Password: </label>
-						<input
-							required
-							className="form-control"
-							type="password"
-							value={this.state.password}
-							onInput={e => {
-								this.setState({ password: e.currentTarget.value });
-							}}
-						/>
-					</div>
-					<button type="submit" className="btn btn-primary mt-3">
-						Login
-					</button>
-					<div>
+			<div className="flex min-w-screen items-center justify-center">
+				<div className="w-full  max-w-2xl  space-y-6 rounded-lg bg-gray-800 p-8 shadow-lg">
+					<h1 className="text-center text-2xl font-semibold text-gray-400">Sign in</h1>
+					<form
+						className="space-y-4"
+						onSubmit={event => {
+							event.preventDefault();
+							this.loginHandler();
+						}}
+					>
+						<div>
+							<label className="block text-sm font-medium text-gray-500">Login: </label>
+							<input
+								required
+								className="mt-1 w-full rounded-md  bg-gray-600 p-2"
+								type="text"
+								value={this.state.username}
+								onInput={e => {
+									this.setState({ username: e.currentTarget.value });
+								}}
+							/>
+						</div>
+						<div className="mb-7">
+							<label className="block text-sm font-medium text-gray-500">Password: </label>
+							<input
+								required
+								className="mt-1 w-full rounded-md bg-gray-600 p-2"
+								type="password"
+								value={this.state.password}
+								onInput={e => {
+									this.setState({ password: e.currentTarget.value });
+								}}
+							/>
+						</div>
+
+						<button
+							type="submit"
+							className="w-full rounded-md bg-blue-600 p-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+						>
+							Login
+						</button>
+					</form>
+					<div className="text-center text-sm text-gray-500">
 						<span>
-							Don&apos;t have an account? <a href="/register">Sign up</a>
+							Don&apos;t have an account?{' '}
+							<a href="/register" className="text-blue-600 hover:underline">
+								Sign up
+							</a>
 						</span>
 					</div>
-				</form>
+				</div>
 			</div>
 		);
 	}

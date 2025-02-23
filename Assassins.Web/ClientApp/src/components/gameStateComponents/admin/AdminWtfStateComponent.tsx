@@ -28,7 +28,10 @@ const AdminWtfStateComponent = (props: Props) => {
 				<span>Don't worry you can try restarting the game</span>
 			</div>
 			<div>
-				<a className="btn btn-primary mt-3" onClick={() => createNewGame()}>
+				<a
+					className="w-full rounded-md text-center bg-blue-600 p-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+					onClick={() => createNewGame()}
+				>
 					Restart everything
 				</a>
 				<span>*Goes back to registartion phase</span>
